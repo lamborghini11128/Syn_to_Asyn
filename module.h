@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
-using namespce std;
+using namespace std;
 
 typedef string wire;
 class Module
@@ -17,23 +17,23 @@ private:
 	void setModuleName();
 	void setInOutputs();
 	void combinationalCheck();	// check if the module is combinational
-	vecotr<string> module_code;	// each element in vector contain one line of code of the module
+	vector<string> module_code;	// each element in vector contain one line of code of the module
 	string module_name;
 	bool is_combinational;
 	vector<wire> input_ports;
 	vector<wire> output_ports;
 };
 
-Module::setModuleName() {
-	stringstream ssName(module_code);
+void Module::setModuleName() {
+	stringstream ssName(module_code[0]);
 	string buf;
 	ssName >> buf;	// buf == "module"
 	ssName >> module_name;
 }
 
-Module::setInOutputs() {
+void Module::setInOutputs() {
 	string buf;
-	for (int line=0; line<module_code.size(); ++i) {
+	for (int i=0; i<module_code.size(); ++i) {
 		stringstream ssLine(module_code[i]);
 		ssLine >> buf;
 		if (buf=="input") {
@@ -53,10 +53,10 @@ Module::setInOutputs() {
 	}
 }
 
-Module::combinationalCheck() {
+void Module::combinationalCheck() {
 	string buf;
 	is_combinational=true;
-	for (int line=0; line<module_code.size(); ++i) {
+	for (int i=0; i<module_code.size(); ++i) {
 		stringstream ssLine(module_code[i]);
 		ssLine >> buf;
 		if (buf=="DFFQX1") {
