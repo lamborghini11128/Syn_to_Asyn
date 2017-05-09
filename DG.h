@@ -24,6 +24,7 @@ class DGraph
     public:
         DGraph();
         ~DGraph();
+        void add_Node(const Node& newNode) { node_list.push_back(newNode); }
 
     private:
         vector< Node > node_list;
