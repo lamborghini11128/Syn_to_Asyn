@@ -4,6 +4,7 @@
 using namespace std;
 
 typedef string wire;
+
 class Module
 {
 public:
