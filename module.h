@@ -13,7 +13,7 @@ public:
 		setInOutputs();
 		combinationalCheck();
 	}
-	~Module();
+	//~Module();
 private:
 	void setModuleName();
 	void setInOutputs();
