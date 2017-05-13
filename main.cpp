@@ -58,9 +58,9 @@ void file_parser(const char* gate_file)
         if (!module_list[i]->is_included) { top_module_list.push_back(module_list[i]); }
     }
     
-    // build DG with combinational part
+    // build DG
     Global_DG = new DGraph();
-    Node* PINode, PONode;
+    Node PINode, PONode;
     for (int i=0; i<top_module_list.size(); ++i) {}
     // remove combinational part
     for (int i=0; i<module_list.size(); ++i)    { delete module_list[i]; }

@@ -74,9 +74,34 @@ void Module::setInOutWires() {
                 wires.push_back(new_wire);
             }
         }
+        else if (buf=="assign") {}
         else { break; }
     }
 }
+
+/*
+void parse_inoutputs(const string&);
+void Moduel::buildGraph() {
+    if (is_combinational) { return; }
+    int i=0;
+    string buf;
+    // jump to where module description starts
+    for (; i<module_code.size(); ++i) {
+        stringstream ssLine(module_code[i]);
+        ssLine>>buf;
+        if (buf!="input" && buf!="output" && buf!="wire" && buf!="assign") { break; }
+    }
+    // parse variables passed into mudule
+    for (int j = i; j<module_code.size(); ++j) {
+        stringstream ssLine(module_code[j]);
+        string type, name;
+        ssLine >> type >> name;
+        ssLine >> buf;
+        vector<string> iopass;
+        while (ssLine >> buf && buf != ");") { iopass.push_back(buf); }
+    }
+}
+*/
 
 void Module::combinationalCheck() {
     string buf;
@@ -106,3 +131,5 @@ void Module::module_including(const vector<Module*>& module_list) {
         }
     }
 }
+
+//string parse_inoutputs(const string& in_output) {} 

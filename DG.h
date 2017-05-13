@@ -55,6 +55,7 @@ class DGraph
     public:
         DGraph();
         ~DGraph();
+    //Graph generation part
         void add_Node(const Node& newNode) { node_list.push_back(newNode); }
         
     //Detect cycle part

@@ -19,6 +19,7 @@ private:
 	string name;
 	vector<Module*> fanin;
 	vector<Module*> fanout;
+	vector<Wire*> link;
 };
 
 class Module
@@ -30,9 +31,12 @@ public:
 		combinationalCheck();
 		is_included=false;
 	}
+	Module(const string& type, const string& name, vector<Wire*> inputs, vector<Wire*> outputs, bool is_com=false)
+		: module_type(type), module_name(name), input_ports(inputs), output_ports(outputs),  is_combinational(is_com) {}
 	~Module();
 	void module_including(const vector<Module*>&);
 	const vector<string>& get_module_code() { return module_code; }
+	//void biuldGraph();
 	string module_type;
 	string module_name;
 	bool is_included;
@@ -46,6 +50,7 @@ private:
 	vector<Wire*> input_ports;
 	vector<Wire*> output_ports;
 	vector<Wire*> wires;
+	vector<Module*> graph;
 };
 
 /*
