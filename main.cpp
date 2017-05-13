@@ -1,8 +1,6 @@
 #include <iostream>
 #include <iomanip>
-#include <string>
 #include <fstream>
-#include <vector>
 #include "DG.h"
 #include "module.h"
 
@@ -12,6 +10,7 @@ DGraph* Global_DG;
 void file_parser(const char*);
 void graph_generator();
 void graph_analysis();
+void dfs();
 
 int main(int argc, char** argv)     
 {
@@ -34,6 +33,7 @@ void file_parser(const char* gate_file)
     vector<string> module_code;
     string line, word;
     bool is_reading=false;
+    // read in the module code and construct Module
     while (getline(fgate_file, line)) {
         if      (line.substr(0, 6)!="module" && !is_reading)    continue;   // garbage message
         else if (line.substr(0, 6)=="module" && !is_reading) {
@@ -52,13 +52,17 @@ void file_parser(const char* gate_file)
             try { throw(line); }
         catch(string exception) { cout << exception << endl; }
     }
-    // build the hierarchy structure of modules
+    // determine the top module
     for (int i=0; i<module_list.size(); ++i) { module_list[i]->module_including(module_list); }
-    // analysis
+    for (int i=0; i<module_list.size(); ++i) {
+        if (!module_list[i]->is_included) { top_module_list.push_back(module_list[i]); }
+    }
     
+    // build DG with combinational part
     Global_DG = new DGraph();
-    Node PINode, PONode;
-
+    Node* PINode, PONode;
+    for (int i=0; i<top_module_list.size(); ++i) {}
+    // remove combinational part
     for (int i=0; i<module_list.size(); ++i)    { delete module_list[i]; }
 }
 
