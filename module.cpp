@@ -79,27 +79,68 @@ void Module::setInOutWires() {
     }
 }
 
-/*
-void parse_inoutputs(const string&);
-void Moduel::buildGraph() {
-    if (is_combinational) { return; }
-    int i=0;
-    string buf;
-    // jump to where module description starts
-    for (; i<module_code.size(); ++i) {
-        stringstream ssLine(module_code[i]);
-        ssLine>>buf;
-        if (buf!="input" && buf!="output" && buf!="wire" && buf!="assign") { break; }
+void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const vector<Module*> module_lib) {
+    if (is_combinational) {
+        for (auto& pi: PI_list) {
+            for (auto& po: PO_list) {
+                pi->add_fanout(po);
+                po->add_fanin(pi);
+            }
+        }
+        return;
     }
-    // parse variables passed into mudule
-    for (int j = i; j<module_code.size(); ++j) {
-        stringstream ssLine(module_code[j]);
+
+    else {
+        int i=0;
         string type, name;
-        ssLine >> type >> name;
-        ssLine >> buf;
-        vector<string> iopass;
-        while (ssLine >> buf && buf != ");") { iopass.push_back(buf); }
+        for (; i!=module_code.size(); ++i) {
+            stringstream ssLine(module_code[i]);
+            ssLine >> type;
+            if (type!="input" && type!="output" && type!="wire" && type!="assign") { break; }
+        }
+
+        for (int j=i; j<module_code.size(); ++j) {
+            stringstream ssLine(module_code[i]);
+            ssLine >> type >> name;
+            // Module* module_instance = new Module(type, name);
+            Module module_instance(type, name);
+
+            if (type=="DFFQX1") { module_instance.DFF_parse_and_link(module_code[i]); }
+            else {
+                for (int k=0; k!=module_lib.size(); ++k) {
+                    if (type==module_lib[k]->module_type) {
+                        module_instance.module_parse_and_link(module_code[i]);
+                        break;
+                    }
+                }
+                module_instance.gate_parse_and_link(module_code[i]);
+            }
+        }
+
+        vector<Node*> breakdown_node_list;
+        vector<Module*> breakdown_module_list;
+        for (int i=0; i!=input_ports.size(); ++i) {
+            this->dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, module_lib, breakdown_node_list, breakdown_module_list);
+        }
+
+        for (int i=0; i!=breakdown_module_list.size(); ++i) {
+            Node* broken_node = breakdown_node_list[i];
+            breakdown_module_list[i]->build_graph(broken_node->get_fanin_list(), broken_node->get_fanout_list(), module_lib);
+        }
     }
+}
+
+void Module::DFF_parse_and_link(const string& line_code) {return;}
+void Module::module_parse_and_link(const string& line_code) {return;}
+void Module::gate_parse_and_link(const string& line_code) {return;}
+void Module::dfs_circuit_to_graph(const Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
+     const vector<Module*>& module_lib, vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list) {return;}
+
+// return 1 for input, 0 for output
+//void Module::parse_module(string& module_instance) {}
+/*
+bool Module::parse_arguments(string& argument) {
+    argument.erase(0);
 }
 */
 
@@ -116,20 +157,18 @@ void Module::combinationalCheck() {
     }
 }
 
-void Module::module_including(const vector<Module*>& module_list) {
-    string buf_word;
+void Module::module_including(const vector<Module*>& module_lib) {
+    string buf_type;
     for (int i=0; i<module_code.size(); ++i) {
         stringstream ssLine(module_code[i]);
-        ssLine >> buf_word;
-        for (int j=0; j<module_list.size(); ++j) {
-            if (buf_word==module_list[j]->module_name) {
-                if (module_include_set.find(module_list[j]) == module_include_set.end()) {
-                    module_include_set.insert(module_list[j]);
+        ssLine >> buf_type;
+        for (int j=0; j<module_lib.size(); ++j) {
+            if (buf_type==module_lib[j]->module_name) {
+                if (module_include_set.find(module_lib[j]) == module_include_set.end()) {
+                    module_include_set.insert(module_lib[j]);
                     is_included=true;
                 }
             }
         }
     }
 }
-
-//string parse_inoutputs(const string& in_output) {} 

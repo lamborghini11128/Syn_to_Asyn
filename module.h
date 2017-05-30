@@ -2,6 +2,7 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include "DG.h"
 using namespace std;
 
 #ifndef MODULE_H
@@ -15,6 +16,8 @@ public:
 	Wire(string& name): name(name) {}
 	void add_fanin(Module* gate) { fanin.push_back(gate); }
 	void add_fanout(Module* gate) { fanout.push_back(gate); }
+	bool is_equal(const string& check) { return check == name;}
+	vector<Module*> get_fanin() { return fanin;}
 private:
 	string name;
 	vector<Module*> fanin;
@@ -31,12 +34,12 @@ public:
 		combinationalCheck();
 		is_included=false;
 	}
-	Module(const string& type, const string& name, vector<Wire*> inputs, vector<Wire*> outputs, bool is_com=false)
-		: module_type(type), module_name(name), input_ports(inputs), output_ports(outputs),  is_combinational(is_com) {}
+	Module(const string& type, const string& name): module_type(type), module_name(name) {}
 	~Module();
+
 	void module_including(const vector<Module*>&);
 	const vector<string>& get_module_code() { return module_code; }
-	//void biuldGraph();
+	void build_graph(vector<Node*>&, vector<Node*>&, const vector<Module*>);
 	string module_type;
 	string module_name;
 	bool is_included;
@@ -44,26 +47,20 @@ private:
 	void setModuleType();
 	void setInOutWires();
 	void combinationalCheck();	// check if the module is combinational
+	void DFF_parse_and_link(const string&);
+	void module_parse_and_link(const string& line_code);
+	void gate_parse_and_link(const string& line_code);
+	void dfs_circuit_to_graph(const Wire* start_wire, vector<Node*>&, vector<Node*>&,
+	     const vector<Module*>& module_lib, vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list);
+
+	
 	vector<string> module_code;	// each element in vector contain one line of code of the module
 	set<Module*> module_include_set;
 	bool is_combinational;
 	vector<Wire*> input_ports;
 	vector<Wire*> output_ports;
 	vector<Wire*> wires;
-	vector<Module*> graph;
+	//DGraph module_graph;
 };
 
-/*
-class Gate
-{
-public:
-	Gate(string& name): name(name) {}
-	void add_fanin(Wire* wire) { fanin.push_back(wire);}
-	void add_fanout(Wire* wire) { fanout.push_back(wire); }
-private:
-	string name;
-	vector<Wire*> fanin;
-	vector<Wire*> fanout;
-};
-*/
 #endif

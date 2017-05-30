@@ -26,14 +26,14 @@ int main(int argc, char** argv)
 
 void file_parser(const char* gate_file)
 {
-    // read in the module code
     fstream fgate_file(gate_file);
-    vector<Module*> module_list;
+    vector<Module*> module_lib;
+
     vector<Module*> top_module_list;
     vector<string> module_code;
-    string line, word;
+    string line;
     bool is_reading=false;
-    // read in the module code and construct Module
+    // read in the module code and construct module_lib
     while (getline(fgate_file, line)) {
         if      (line.substr(0, 6)!="module" && !is_reading)    continue;   // garbage message
         else if (line.substr(0, 6)=="module" && !is_reading) {
@@ -44,7 +44,7 @@ void file_parser(const char* gate_file)
         else if (line=="endmodule" && is_reading) {
             module_code.push_back(line);
             Module* one_module = new Module(module_code);
-            module_list.push_back(one_module);
+            module_lib.push_back(one_module);
             module_code.clear();
             is_reading = false;
         }
@@ -52,18 +52,23 @@ void file_parser(const char* gate_file)
             try { throw(line); }
         catch(string exception) { cout << exception << endl; }
     }
+
     // determine the top module
-    for (int i=0; i<module_list.size(); ++i) { module_list[i]->module_including(module_list); }
-    for (int i=0; i<module_list.size(); ++i) {
-        if (!module_list[i]->is_included) { top_module_list.push_back(module_list[i]); }
+    for (int i=0; i<module_lib.size(); ++i) { module_lib[i]->module_including(module_lib); }
+    for (int i=0; i<module_lib.size(); ++i) {
+        if (!module_lib[i]->is_included) { top_module_list.push_back(module_lib[i]); }
     }
     
     // build DG
     Global_DG = new DGraph();
-    Node PINode, PONode;
-    for (int i=0; i<top_module_list.size(); ++i) {}
-    // remove combinational part
-    for (int i=0; i<module_list.size(); ++i)    { delete module_list[i]; }
+    Node PI_node, PO_node;
+    vector<Node*> PI; PI.push_back(&PI_node);
+    vector<Node*> PO; PO.push_back(&PO_node);
+    for (int i=0; i<top_module_list.size(); ++i) {
+        top_module_list[i]->build_graph(PI, PO, module_lib);
+    }
+
+    for (int i=0; i<module_lib.size(); ++i)    { delete module_lib[i]; }
 }
 
 void graph_generator()
