@@ -40,6 +40,8 @@ public:
 	void module_including(const vector<Module*>&);
 	const vector<string>& get_module_code() { return module_code; }
 	void build_graph(vector<Node*>&, vector<Node*>&, const vector<Module*>);
+    void add_fanin(Wire* wire) { input_ports.push_back(wire); }
+    void add_fanout(Wire* wire) { output_ports.push_back(wire); }
 	string module_type;
 	string module_name;
 	bool is_included;
@@ -47,8 +49,8 @@ private:
 	void setModuleType();
 	void setInOutWires();
 	void combinationalCheck();	// check if the module is combinational
-	void DFF_parse_and_link(const string&);
-	void module_parse_and_link(const string& line_code);
+	void DFF_parse_and_link(const string&, Module*);
+	void module_parse_and_link(const string&, Module*);
 	void gate_parse_and_link(const string& line_code);
 	void dfs_circuit_to_graph(const Wire* start_wire, vector<Node*>&, vector<Node*>&,
 	     const vector<Module*>& module_lib, vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list);

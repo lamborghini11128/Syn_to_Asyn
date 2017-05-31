@@ -28,7 +28,7 @@ void Module::setInOutWires() {
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
                 for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+"["+to_string(i)+"]"; 
+                    string new_wire_name = buf+" "+to_string(i); 
                     Wire* new_wire = new Wire(new_wire_name);
                     input_ports.push_back(new_wire);
                 }
@@ -46,7 +46,7 @@ void Module::setInOutWires() {
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
                 for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+"["+to_string(i)+"]"; 
+                    string new_wire_name = buf+" "+to_string(i); 
                     Wire* new_wire = new Wire(new_wire_name);
                     output_ports.push_back(new_wire);
                 }
@@ -64,7 +64,7 @@ void Module::setInOutWires() {
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
                 for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+"["+to_string(i)+"]"; 
+                    string new_wire_name = buf+" "+to_string(i); 
                     Wire* new_wire = new Wire(new_wire_name);
                     wires.push_back(new_wire);
                 }
@@ -102,14 +102,15 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
         for (int j=i; j<module_code.size(); ++j) {
             stringstream ssLine(module_code[i]);
             ssLine >> type >> name;
-            // Module* module_instance = new Module(type, name);
             Module module_instance(type, name);
 
-            if (type=="DFFQX1") { module_instance.DFF_parse_and_link(module_code[i]); }
+            if (type=="DFFQX1") { this->DFF_parse_and_link(module_code[i], &module_instance); }
             else {
                 for (int k=0; k!=module_lib.size(); ++k) {
                     if (type==module_lib[k]->module_type) {
-                        module_instance.module_parse_and_link(module_code[i]);
+                        module_instance = *module_lib[k];
+                        module_instance.module_name = name;
+                        this->module_parse_and_link(module_code[i], &module_instance);
                         break;
                     }
                 }
@@ -130,19 +131,43 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
     }
 }
 
-void Module::DFF_parse_and_link(const string& line_code) {return;}
-void Module::module_parse_and_link(const string& line_code) {return;}
+void dispose_parentheses(string& name, const string& code) {
+    int start = code.find('(');
+    int end = code.find(start, ')');
+    name = code.substr(start, end-start);
+}
+
+void Module::DFF_parse_and_link(const string& line_code, Module* module_instance) {
+    stringstream ss(line_code);
+    string buffer;
+    ss >> buffer >> buffer >> buffer >> buffer;
+    string in_name;
+    dispose_parentheses(in_name, buffer);
+    ss >> buffer >> buffer;
+    string out_name;
+    dispose_parentheses(out_name, buffer);
+    cout << in_name << out_name;
+    for (auto& w: wires) {
+        if (w->is_equal(in_name)) {
+            w->add_fanout(module_instance);
+            module_instance->add_fanin(w);
+        }
+        else if (w->is_equal(out_name)) {
+            w->add_fanin(module_instance);
+            module_instance->add_fanout(w);
+        }
+    }   
+    return;
+}
+void Module::module_parse_and_link(const string& line_code, Module* module_instance) {
+    stringstream ss(line_code);
+    string buffer;
+    ss >> buffer >> buffer >> buffer >> buffer;
+    return;
+}
 void Module::gate_parse_and_link(const string& line_code) {return;}
 void Module::dfs_circuit_to_graph(const Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
      const vector<Module*>& module_lib, vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list) {return;}
-
-// return 1 for input, 0 for output
-//void Module::parse_module(string& module_instance) {}
-/*
-bool Module::parse_arguments(string& argument) {
-    argument.erase(0);
-}
-*/
 
 void Module::combinationalCheck() {
     string buf;
