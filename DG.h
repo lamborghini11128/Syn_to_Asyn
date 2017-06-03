@@ -11,33 +11,16 @@ class Node
 {
     public:
         Node();
+        Node(string name): name(name) {}
         ~Node();
 
     // Graph generation
         void add_fanin(Node* node)  { fanin_list.push_back(node); }
         void add_fanout(Node* node) { fanout_list.push_back(node); }
-        bool remove_fanin(Node* node) {
-            for (int i=0; i!=fanin_list.size(); ++i) {
-                if (fanin_list[i]==node) {
-                    fanin_list.erase(fanin_list.begin()+i);
-                    return true;
-                }
-            }
-            return false;
-        }
         vector<Node*>& get_fanin_list() { return fanin_list; }
         vector<Node*>& get_fanout_list() { return fanout_list; }
-        bool remove_fanout(Node* node) {
-            for (int i=0; i!=fanout_list.size(); ++i) {
-                if (fanout_list[i]==node) {
-                    fanout_list.erase(fanout_list.begin()+i);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-
+        string name;
+        
     //Detect cycle part
         Node* get_fanin(int i) {return fanin_list[i];}
         Node* get_fanout(int i) {return fanout_list[i];}
@@ -57,7 +40,6 @@ class Node
     private:
         vector< Node*>  fanout_list;
         vector< Node*>  fanin_list;
-    
     
     //Detect cycle part
         vector <Cycle*> cycle_list;         //cycles that contain the node

@@ -136,8 +136,10 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
 
         vector<Node*> breakdown_node_list;
         vector<Module*> breakdown_module_list;
+        vector<Node*> contructed_node_list;
         for (int i=0; i!=input_ports.size(); ++i) {
-            this->dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list);
+            this->dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list,
+             contructed_node_list);
         }
 
         for (int i=0; i!=breakdown_module_list.size(); ++i) {
@@ -210,8 +212,8 @@ void Module::module_parse_and_link(const string& line_code, Module* module_insta
     }
     return;
 }
-
 void Module::gate_parse_and_link(const string& line_code, Module* module_instance) {
+    module_instance->set_combinational();
     stringstream ss(line_code);
     string buffer;
     ss >> buffer >> buffer >> buffer >> buffer;
@@ -240,11 +242,77 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
     }
     return;
 }
+/*
+template <class T>
+bool vector_find(vector<T&> vec, T& ele) {
+    for (auto i: vec) {
+        if (T==i) { return true; }
+    }
+    return false;
+}
+*/
+
 void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
-     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list) {
+     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& contructed_node_list) {
+    for (auto& pi_wire: output_ports) {
+        if (start_wire==pi_wire) {
+            for (auto& i_node: start_node_list) {
+                for (auto& o_node: end_node_list) {
+                    i_node->add_fanout(o_node);
+                    o_node->add_fanin(i_node);
+                }
+            }
+            return;
+        }
+    }
     for (auto& module: start_wire->get_fanout()) {
         if (module->module_type=="DFFQX1") {
-            for (auto& start_node: start_node_list) {}
+            bool inserted = false;
+            for (auto& node: contructed_node_list) {
+                if (node->name==module->module_name) {
+                    for (auto& start_node: start_node_list) { start_node->add_fanout(node); }
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                Node* dff_node = new Node(module->module_name);
+                contructed_node_list.push_back(dff_node);
+                for (auto& start_node: start_node_list) { start_node->add_fanout(dff_node); }
+                vector<Node*> nl = {dff_node};
+                for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
+                 breakdown_node_list, breakdown_module_list, contructed_node_list); }
+            }
+        }
+        else {
+            bool is_breakdown_module=false;
+            for (auto& m: module_include_set) {
+                bool inserted = false;
+                if (m->module_type==module->module_type) {
+                    is_breakdown_module = true;
+                    for (auto& n: contructed_node_list) {
+                        if (n->name==module->module_name) {
+                            for (auto& start_node:start_node_list) { start_node->add_fanout(n); }
+                            inserted = true;
+                            break;
+                        }
+                    }
+                    if (!inserted) {
+                        Node* module_node = new Node(module->module_name);
+                        contructed_node_list.push_back(module_node);
+                        breakdown_node_list.push_back(module_node);
+                        breakdown_module_list.push_back(module);
+                        for (auto& start_node: start_node_list) { start_node->add_fanout(module_node); }
+                        vector<Node*> nl = {module_node};
+                        for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
+                            breakdown_node_list, breakdown_module_list, contructed_node_list); }
+                    }
+                }
+            }
+            if (!is_breakdown_module) {
+                for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, start_node_list,
+                 end_node_list, breakdown_node_list, breakdown_module_list, contructed_node_list); }
+            }
         }
     }
     return;

@@ -13,14 +13,13 @@ class Module;
 class Wire
 {
 public:
-	Wire(string& name): name(name), is_visited(false) {}
+	Wire(string& name): name(name) {}
 	void add_fanin(Module* gate) { fanin.push_back(gate); }
 	void add_fanout(Module* gate) { fanout.push_back(gate); }
 	bool is_equal(const string& check);
 	vector<Module*>& get_fanin() { return fanin;}
     vector<Module*>& get_fanout() { return fanout;}
 	string name;
-    bool is_visited;
 private:
     vector<Module*> fanin;
     vector<Module*> fanout;
@@ -35,9 +34,8 @@ public:
 		setInOutWires();
 		combinationalCheck();
 		is_included=false;
-        is_visited=false;
 	}
-	Module(const string& type, const string& name): module_type(type), module_name(name), is_visited(false) {}
+	Module(const string& type, const string& name): module_type(type), module_name(name) {}
 	~Module();
 
 	void module_including(const vector<Module*>&);
@@ -50,15 +48,15 @@ public:
 	string module_type;
 	string module_name;
     bool is_included;
-    bool is_visited;
+    void set_combinational() {is_combinational=true;}
+    void combinationalCheck();  // check if the module is combinational
 private:
     void setModuleType();
     void setInOutWires();
-    void combinationalCheck();  // check if the module is combinational
     void DFF_parse_and_link(const string&, Module*);
     void module_parse_and_link(const string&, Module*);
     void gate_parse_and_link(const string&, Module*);
-    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&);
+    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&);
     
     vector<string> module_code; // each element in vector contain one line of code of the module
     set<Module*> module_include_set;
