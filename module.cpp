@@ -4,7 +4,7 @@ using namespace std;
 
 bool Wire::is_equal(const string& check) {
      if (check==name) { return true; }
-     else if (check.find('[')) {
+     else if (check.find('[')!=string::npos) {
         int start = check.find('[');
         int end = check.find(']');
         string idx = check.substr(start, end-start);
@@ -107,7 +107,7 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
     }
 
     else {
-        int i=0;
+        int i=1;
         string type, name;
         for (; i!=module_code.size(); ++i) {
             stringstream ssLine(module_code[i]);
@@ -242,15 +242,6 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
     }
     return;
 }
-/*
-template <class T>
-bool vector_find(vector<T&> vec, T& ele) {
-    for (auto i: vec) {
-        if (T==i) { return true; }
-    }
-    return false;
-}
-*/
 
 void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
      vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& contructed_node_list) {
