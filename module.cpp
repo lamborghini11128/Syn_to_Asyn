@@ -96,6 +96,7 @@ void Module::setInOutWires() {
 }
 
 void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const vector<Module*> module_lib) {
+    cout << module_type << " " << module_name << "building graph..." << endl;
     if (is_combinational) {
         for (auto& pi: PI_list) {
             for (auto& po: PO_list) {
@@ -268,6 +269,7 @@ void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_li
             }
             if (!inserted) {
                 Node* dff_node = new Node(module->module_name);
+                cout << "contructing node..." << module->module_name << endl;
                 contructed_node_list.push_back(dff_node);
                 for (auto& start_node: start_node_list) { start_node->add_fanout(dff_node); }
                 vector<Node*> nl = {dff_node};
@@ -328,10 +330,10 @@ void Module::module_including(const vector<Module*>& module_lib) {
         stringstream ssLine(module_code[i]);
         ssLine >> buf_type;
         for (int j=0; j<module_lib.size(); ++j) {
-            if (buf_type==module_lib[j]->module_name) {
+            if (buf_type==module_lib[j]->module_type) {
                 if (module_include_set.find(module_lib[j]) == module_include_set.end()) {
                     module_include_set.insert(module_lib[j]);
-                    is_included=true;
+                    module_lib[j]->is_included=true;
                 }
             }
         }

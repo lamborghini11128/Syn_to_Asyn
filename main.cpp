@@ -58,7 +58,6 @@ void file_parser(const char* gate_file)
     for (int i=0; i<module_lib.size(); ++i) {
         if (!module_lib[i]->is_included) { top_module_list.push_back(module_lib[i]); }
     }
-    //cout << top_module_list.size() <<endl;
     
     // build DG
     Global_DG = new DGraph();
