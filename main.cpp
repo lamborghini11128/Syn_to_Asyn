@@ -40,7 +40,9 @@ void file_parser(const char* gate_file)
             module_code.push_back(line);
             is_reading = true;
         }
-        else if (line!="endmodule" && is_reading)   module_code.push_back(line);
+        else if (line!="endmodule" && is_reading) {
+            if (line!="") {module_code.push_back(line);}
+        }
         else if (line=="endmodule" && is_reading) {
             module_code.push_back(line);
             Module* one_module = new Module(module_code);

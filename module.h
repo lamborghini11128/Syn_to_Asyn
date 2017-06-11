@@ -50,6 +50,7 @@ public:
     bool is_included;
     void set_combinational() {is_combinational=true;}
     void combinationalCheck();  // check if the module is combinational
+    void get_wire_array(string, vector<string>&);
 private:
     void setModuleType();
     void setInOutWires();
