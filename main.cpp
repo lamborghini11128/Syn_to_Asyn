@@ -82,7 +82,10 @@ void file_parser(const char* gate_file)
         top_module_list[i]->build_graph(PI, PO, module_lib);
     }
 
-    for (int i=0; i<module_lib.size(); ++i)    { delete module_lib[i]; }
+    for (int i=0; i<module_lib.size(); ++i)    {
+        for (auto& wire: module_lib[i]->get_wires()) {delete wire;}
+        delete module_lib[i];
+    }
 }
 
 void graph_generator()

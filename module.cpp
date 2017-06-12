@@ -16,9 +16,7 @@ bool Wire::is_equal(const string& check) {
 }
 
 Module::~Module() {
-    //for (int i=0; i!=input_ports.size(); ++i) { delete input_ports[i]; }
-    //for (int i=0; i!=output_ports.size(); ++i) { delete output_ports[i]; }
-    for (int i=0; i!=wires.size(); ++i) { delete wires[i]; }
+    //for (int i=0; i!=wires.size(); ++i) { delete wires[i]; }
 }
 
 void Module::setModuleType() {
@@ -135,6 +133,7 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
                     if (type==module_lib[k]->module_type) {
                         module_instance.get_input_ports() = module_lib[k]->get_input_ports();
                         module_instance.get_output_ports() = module_lib[k]->get_output_ports();
+                        module_instance.get_wires() = module_lib[k]->get_wires();
                         this->module_parse_and_link(module_code[i], &module_instance);
                         break;
                     }
@@ -197,28 +196,35 @@ void Module::module_parse_and_link(const string& line_code, Module* module_insta
         if (buffer==")") {break;}
         string wire_type, wire_name;
         dispose_parentheses(wire_type, wire_name, buffer);
-        vector<string> wire_array;
-        module_instance->get_wire_array(wire_type, wire_array);
+        vector<string> instance_wire_array, wire_array;
+        module_instance->get_wire_array(wire_type, instance_wire_array);
+        get_wire_array(wire_name, wire_array);
 
-        for(auto& wire: wire_array) {
-            for (auto& in_wire: module_instance->get_input_ports()) {
-                if (in_wire->is_equal(wire_type)) {
+        for(auto& wire: instance_wire_array) {
+            for (int i=0; i!=module_instance->get_input_ports().size(); ++i) {
+            //for (auto& in_wire: module_instance->get_input_ports()) {
+                if (module_instance->get_input_ports()[i]->is_equal(wire)) {
+                //if (in_wire->is_equal(wire)) {
                     for (auto& w: wires) {
-                        if (w->is_equal(wire_name)) {
-                            w->add_fanout(module_instance);
-                            module_instance->add_fanin(w);
-                            break;
+                        for (auto& wi: wire_array) {
+                            if (w->is_equal(wi)) {
+                                w->add_fanout(module_instance);
+                                module_instance->add_fanin(w);
+                                break;
+                            }
                         }
                     }
                 }
             }
             for (auto& out_wire: module_instance->get_output_ports()) {
-                if (out_wire->is_equal(wire_type)) {
+                if (out_wire->is_equal(wire)) {
                     for (auto& w: wires) {
-                        if (w->is_equal(wire_name)) {
-                            w->add_fanin(module_instance);
-                            module_instance->add_fanout(w);
-                            break;
+                        for (auto& wo: wire_array) {
+                            if (w->is_equal(wire)) {
+                                w->add_fanin(module_instance);
+                                module_instance->add_fanout(w);
+                                break;
+                            }
                         }
                     }
                 }
