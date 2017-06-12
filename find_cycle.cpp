@@ -17,7 +17,7 @@ bool nodep_compare (Node* node1, Node* node2)
 void DGraph::find_cycle()
 {    
 
-
+    cout << "Start to find cycle and fvs" << endl;
     cout << node_list.size() << endl;
 
     vector <Node*> DFS_start_nodes; 
@@ -40,39 +40,6 @@ void DGraph::find_cycle()
 
 
 }
-
-void DGraph::find_fvs()
-{
-    vector <Node*> sorted_node;
-    for (int i=0;i<node_list.size();i++)
-    {
-        sorted_node.push_back(&node_list[i]);
-    }
-    sort(sorted_node.begin(),sorted_node.end(),nodep_compare);
-    int broken_cycle_count=0,i=0;
-    while (broken_cycle_count!=cycle_list->get_size())
-    {
-        bool is_added=false;
-        cout<< sorted_node[i]->get_cycle_size() << endl;   
-        for (int j=0;j<sorted_node[i]->get_cycle_size();j++)
-        {
-            if (sorted_node[i]->get_cycle(j)->get_is_broken()==false)
-            {
-                sorted_node[i]->get_cycle(j)->set_is_broken(true);
-                broken_cycle_count+=1;
-                if (is_added==false)
-                {
-                    fvs.push_back(sorted_node[i]);
-                    is_added=true;
-                }
-            }
-        }
-        i+=1;
-    }
-
-
-}
-
 
 
 
@@ -109,3 +76,39 @@ void DFS_traverse(Node* current_node, vector<Node*>& DFS_stack, Cycle_list* c_l)
 
 
 }
+
+void DGraph::find_fvs()
+{
+    vector <Node*> sorted_node;
+    for (int i=0;i<node_list.size();i++)
+    {
+        sorted_node.push_back(&node_list[i]);
+    }
+    sort(sorted_node.begin(),sorted_node.end(),nodep_compare);
+    int broken_cycle_count=0,i=0;
+    if (cycle_list==NULL)
+        return;
+    while (broken_cycle_count!=cycle_list->get_size())
+    {
+        bool is_added=false;
+        cout<< sorted_node[i]->get_cycle_size() << endl;   
+        for (int j=0;j<sorted_node[i]->get_cycle_size();j++)
+        {
+            if (sorted_node[i]->get_cycle(j)->get_is_broken()==false)
+            {
+                sorted_node[i]->get_cycle(j)->set_is_broken(true);
+                broken_cycle_count+=1;
+                if (is_added==false)
+                {
+                    fvs.push_back(sorted_node[i]);
+                    is_added=true;
+                }
+            }
+        }
+        i+=1;
+    }
+
+
+}
+
+

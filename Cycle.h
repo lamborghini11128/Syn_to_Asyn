@@ -14,7 +14,7 @@ class Cycle
 {
     public:
         Cycle()  {cycle_list=NULL; is_broken=false;}
-        ~Cycle();
+        ~Cycle() {}
         //vector<int> get_nodes_id {return nodes_id;}
         void set_cycle_list(Cycle_list* c) {cycle_list=c;}
         Cycle_list* get_cycle_list() {return cycle_list;}
