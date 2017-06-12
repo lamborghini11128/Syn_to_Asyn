@@ -159,10 +159,11 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
 }
 
 void dispose_parentheses(string& type, string& name, const string& code) {
+    if (code.find('(')==string::npos) {return;}
     int start = code.find('(');
-    int end = code.find(start, ')');
+    int end = code.find(')', start);
     type = code.substr(1, start-1);
-    name = code.substr(start, end-start);
+    name = code.substr(start+1, end-start-1);
 }
 
 void Module::DFF_parse_and_link(const string& line_code, Module* module_instance) {
@@ -193,11 +194,11 @@ void Module::module_parse_and_link(const string& line_code, Module* module_insta
     string buffer;
     ss >> buffer >> buffer >> buffer;
     while(ss>>buffer) {
-        if (buffer==");") {break;}
+        if (buffer==")") {break;}
         string wire_type, wire_name;
         dispose_parentheses(wire_type, wire_name, buffer);
         vector<string> wire_array;
-        get_wire_array(wire_name, wire_array);
+        module_instance->get_wire_array(wire_type, wire_array);
 
         for(auto& wire: wire_array) {
             for (auto& in_wire: module_instance->get_input_ports()) {
@@ -232,7 +233,7 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
     string buffer;
     ss >> buffer >> buffer >> buffer >> buffer;
     while (ss>>buffer) {
-        if (buffer==");") {break;}
+        if (buffer==")") {break;}
         string wire_type, wire_name;
         dispose_parentheses(wire_type, wire_name, buffer);
         if (wire_type=="CO" || wire_type=="S" || wire_type=="Y") {
@@ -353,15 +354,15 @@ void Module::module_including(const vector<Module*>& module_lib) {
     }
 }
 
-void Module::get_wire_array(string wire_name, vector<string>& wire_array) {
-    if (wire_name.find(':')!=string::npos) {
-        int sp  = wire_name.find(':');
-        int srt = wire_name.find('[');
-        int end = wire_name.find(']');
-        int beg_idx = stoi(wire_name.substr(srt, sp-srt));
-        int end_idx = stoi(wire_name.substr(sp, end-sp));
+void Module::get_wire_array(string wire_type, vector<string>& wire_array) {
+    if (wire_type.find(':')!=string::npos) {
+        int sp  = wire_type.find(':');
+        int srt = wire_type.find('[');
+        int end = wire_type.find(']');
+        int beg_idx = stoi(wire_type.substr(srt, sp-srt));
+        int end_idx = stoi(wire_type.substr(sp, end-sp));
         for (int i=beg_idx; i!=end_idx; ++i) {
-            wire_array.push_back(wire_name.substr(0, srt)+" "+to_string(i));
+            wire_array.push_back(wire_type.substr(0, srt)+" "+to_string(i));
         }
         return;
     }
@@ -369,11 +370,11 @@ void Module::get_wire_array(string wire_name, vector<string>& wire_array) {
         if (w->name.find(' ')!=string::npos) {
             int sp = w->name.find(' ');
             string pure_name = w->name.substr(0, sp);
-            if (wire_name == pure_name) {
-                wire_array.push_back(wire_name);
+            if (wire_type == pure_name) {
+                wire_array.push_back(w->name);
             }
         }
-        else if (w->is_equal(wire_name)) {
+        else if (w->is_equal(wire_type)) {
             wire_array.push_back(w->name);
             return;
         }
