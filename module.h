@@ -45,11 +45,13 @@ public:
     void add_fanout(Wire* wire) { output_ports.push_back(wire); }
     vector<Wire*>& get_input_ports() {return input_ports;}
     vector<Wire*>& get_output_ports() {return output_ports;}
+    vector<Wire*>& get_wires() {return wires;}
 	string module_type;
 	string module_name;
     bool is_included;
     void set_combinational() {is_combinational=true;}
     void combinationalCheck();  // check if the module is combinational
+    void get_wire_array(string, vector<string>&);
 private:
     void setModuleType();
     void setInOutWires();

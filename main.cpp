@@ -35,12 +35,26 @@ void file_parser(const char* gate_file)
     bool is_reading=false;
     // read in the module code and construct module_lib
     while (getline(fgate_file, line)) {
+        if (fgate_file.peek() == 'm') {break;}
+    }
+    while (getline(fgate_file, line)) {
+        //while (line[0]=='\n') {line = line.substr(1);}
+        //while (line.find('\n')!=string::npos) {line[line.find('\n')]=' ';}
+        while (line[line.length()-1]!=';') {
+            if (line=="endmodule") {break;}
+            string tail;
+            if (getline(fgate_file, tail)) {line+=tail;}
+            else {break;}
+        }
+        if (line[line.length()-1]==';') {line.pop_back();}
         if      (line.substr(0, 6)!="module" && !is_reading)    continue;   // garbage message
         else if (line.substr(0, 6)=="module" && !is_reading) {
             module_code.push_back(line);
             is_reading = true;
         }
-        else if (line!="endmodule" && is_reading)   module_code.push_back(line);
+        else if (line!="endmodule" && is_reading) {
+            if (line!="") {module_code.push_back(line);}
+        }
         else if (line=="endmodule" && is_reading) {
             module_code.push_back(line);
             Module* one_module = new Module(module_code);
@@ -70,7 +84,10 @@ void file_parser(const char* gate_file)
     Global_DG->find_cycle();
     Global_DG->find_fvs();
 
-    for (int i=0; i<module_lib.size(); ++i)    { delete module_lib[i]; }
+    for (int i=0; i<module_lib.size(); ++i)    {
+        for (auto& wire: module_lib[i]->get_wires()) {delete wire;}
+        delete module_lib[i];
+    }
 }
 
 void graph_generator()
