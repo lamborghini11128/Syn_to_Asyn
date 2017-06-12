@@ -41,7 +41,7 @@ void Module::setInOutWires() {
                 int n2 = buf.find(']');
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
-                buf.pop_back();
+                //buf.pop_back();
                 for (int i=min; i<=max; ++i) {
                     string new_wire_name = buf+" "+to_string(i);
                     Wire* new_wire = new Wire(new_wire_name);
@@ -50,7 +50,7 @@ void Module::setInOutWires() {
                 }
             }
             else {
-                buf.pop_back();
+                //buf.pop_back();
                 Wire* new_wire = new Wire(buf);
                 input_ports.push_back(new_wire);
                 wires.push_back(new_wire);
@@ -63,7 +63,7 @@ void Module::setInOutWires() {
                 int n2 = buf.find(']');
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
-                buf.pop_back();
+                //buf.pop_back();
                 for (int i=min; i<=max; ++i) {
                     string new_wire_name = buf+" "+to_string(i); 
                     Wire* new_wire = new Wire(new_wire_name);
@@ -72,7 +72,7 @@ void Module::setInOutWires() {
                 }
             }
             else {
-                buf.pop_back();
+                //buf.pop_back();
                 Wire* new_wire = new Wire(buf);
                 output_ports.push_back(new_wire);
                 wires.push_back(new_wire);
@@ -85,7 +85,7 @@ void Module::setInOutWires() {
                 int n2 = buf.find(']');
                 int min = stoi(buf.substr(n1+1, n2-n1-1));
                 ssLine >> buf;
-                buf.pop_back();
+                //buf.pop_back();
                 for (int i=min; i<=max; ++i) {
                     string new_wire_name = buf+" "+to_string(i); 
                     Wire* new_wire = new Wire(new_wire_name);
@@ -93,7 +93,7 @@ void Module::setInOutWires() {
                 }
             }
             else {
-                buf.pop_back();
+                //buf.pop_back();
                 Wire* new_wire = new Wire(buf);
                 wires.push_back(new_wire);
             }

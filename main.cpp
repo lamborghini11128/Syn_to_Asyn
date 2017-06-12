@@ -35,6 +35,18 @@ void file_parser(const char* gate_file)
     bool is_reading=false;
     // read in the module code and construct module_lib
     while (getline(fgate_file, line)) {
+        if (fgate_file.peek() == 'm') {break;}
+    }
+    while (getline(fgate_file, line)) {
+        //while (line[0]=='\n') {line = line.substr(1);}
+        //while (line.find('\n')!=string::npos) {line[line.find('\n')]=' ';}
+        while (line[line.length()-1]!=';') {
+            if (line=="endmodule") {break;}
+            string tail;
+            if (getline(fgate_file, tail)) {line+=tail;}
+            else {break;}
+        }
+        if (line[line.length()-1]==';') {line.pop_back();}
         if      (line.substr(0, 6)!="module" && !is_reading)    continue;   // garbage message
         else if (line.substr(0, 6)=="module" && !is_reading) {
             module_code.push_back(line);
