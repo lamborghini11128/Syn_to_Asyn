@@ -67,6 +67,8 @@ void file_parser(const char* gate_file)
     for (int i=0; i<top_module_list.size(); ++i) {
         top_module_list[i]->build_graph(PI, PO, module_lib);
     }
+    Global_DG->find_cycle();
+    Global_DG->find_fvs();
 
     for (int i=0; i<module_lib.size(); ++i)    { delete module_lib[i]; }
 }

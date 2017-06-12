@@ -27,6 +27,7 @@ class Node
         int get_fanin_size() {return fanin_list.size();}
         int get_fanout_size() {return fanout_list.size();}
         Cycle* get_cycle(int i) {return cycle_list[i];}
+        void add_cycle(Cycle* c) {cycle_list.push_back(c);}
         int get_cycle_size() {return cycle_list.size();}
         void set_node_id (int i) {id=i;}
         int get_node_id () {return id;}
@@ -63,14 +64,19 @@ class DGraph
         
     //Detect cycle part
         void find_cycle();
-        vector<Cycle_list*> get_cycle_list_list() {return cycle_list_list;}         
+        void find_fvs();
+        Cycle_list* get_cycle_list() {return cycle_list;}         
+        void add_node_to_fvs(Node* n) {fvs.push_back(n);}
+        int get_fvs_size() {return fvs.size();}
+        Node* get_fvs_node (int i) {return fvs[i];}
 
     private:
         vector< Node > node_list;           
 
 
     //Detect cycle part
-        vector< Cycle_list*> cycle_list_list;       //the list of cycle_list, for each cycle_list, cycles in which share some same nodes
+        Cycle_list* cycle_list;       //the list of cycle_list, for each cycle_list, cycles in which share some same nodes
+        vector<Node*> fvs;
 };
 
 

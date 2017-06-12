@@ -1,17 +1,24 @@
 #include "DG.h"
 #include "Cycle.h"
 #include "Cycle_list.h"
+#include <algorithm>
+#include <vector>
 
 
 using namespace std;
 
-void DFS_traverse(Node*, vector<Node*>&, vector<Cycle_list*>&);
+void DFS_traverse(Node*, vector<Node*>&, Cycle_list*);
 
+bool nodep_compare (Node* node1, Node* node2)
+{
+    return (node1->get_cycle_size()<node2->get_cycle_size());
+}
 
 void DGraph::find_cycle()
 {    
 
 
+    cout << node_list.size() << endl;
 
     vector <Node*> DFS_start_nodes; 
     //find those node whose indegree==0
@@ -25,7 +32,7 @@ void DGraph::find_cycle()
     for (int i=0; i<DFS_start_nodes.size();i++)
     {
         vector<Node*> DFS_stack;
-        DFS_traverse(DFS_start_nodes[i],DFS_stack,cycle_list_list);
+        DFS_traverse(DFS_start_nodes[i],DFS_stack,cycle_list);
         //clear flag of node in stack (auto?)
         
     }
@@ -34,10 +41,42 @@ void DGraph::find_cycle()
 
 }
 
+void DGraph::find_fvs()
+{
+    vector <Node*> sorted_node;
+    for (int i=0;i<node_list.size();i++)
+    {
+        sorted_node.push_back(&node_list[i]);
+    }
+    sort(sorted_node.begin(),sorted_node.end(),nodep_compare);
+    int broken_cycle_count=0,i=0;
+    while (broken_cycle_count!=cycle_list->get_size())
+    {
+        bool is_added=false;
+        cout<< sorted_node[i]->get_cycle_size() << endl;   
+        for (int j=0;j<sorted_node[i]->get_cycle_size();j++)
+        {
+            if (sorted_node[i]->get_cycle(j)->get_is_broken()==false)
+            {
+                sorted_node[i]->get_cycle(j)->set_is_broken(true);
+                broken_cycle_count+=1;
+                if (is_added==false)
+                {
+                    fvs.push_back(sorted_node[i]);
+                    is_added=true;
+                }
+            }
+        }
+        i+=1;
+    }
+
+
+}
 
 
 
-void DFS_traverse(Node* current_node, vector<Node*>& DFS_stack, vector<Cycle_list*>& c_l_l)
+
+void DFS_traverse(Node* current_node, vector<Node*>& DFS_stack, Cycle_list* c_l)
 {
     //current_node->set_in_stack_or_not(true);
     current_node->set_node_id(DFS_stack.size());
@@ -50,34 +89,17 @@ void DFS_traverse(Node* current_node, vector<Node*>& DFS_stack, vector<Cycle_lis
         if (outnode->get_node_id()!=-1)
         {
             Cycle* cycle=new Cycle(); 
+            c_l->add_cycle(cycle);
             for (int j=outnode->get_node_id();j<DFS_stack.size();j++)
             {
-                if (outnode->get_cycle_size()!=0)
-                {
-                    Cycle_list* cycle_list=outnode->get_cycle(0)->get_cycle_list();
-                    cycle_list->add_cycle(cycle);
-                    cycle->set_cycle_list(cycle_list);
-                }
+                DFS_stack[j]->add_cycle(cycle);
                 cycle->add_node(DFS_stack[j]);
-                if (j==DFS_stack.size()&&cycle->get_cycle_list()==NULL)
-                {
-                    Cycle_list* cycle_list = new Cycle_list();
-                    cycle_list->add_cycle(cycle);
-                    cycle->set_cycle_list(cycle_list);
-                    c_l_l.push_back(cycle_list);
-                }
-                
-                
-                
             }
-
-            
-            
             
         }
         else if (outnode->get_traversed_or_not()==false)
         {
-           DFS_traverse(outnode,DFS_stack,c_l_l); 
+           DFS_traverse(outnode,DFS_stack,c_l); 
         }
         
     }
