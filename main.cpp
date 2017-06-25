@@ -79,7 +79,7 @@ void file_parser(const char* gate_file)
     vector<Node*> PI; PI.push_back(&PI_node);
     vector<Node*> PO; PO.push_back(&PO_node);
     for (int i=0; i<top_module_list.size(); ++i) {
-        top_module_list[i]->build_graph(PI, PO, module_lib);
+        top_module_list[i]->build_graph(PI, PO, module_lib, Global_DG);
     }
     Global_DG->find_cycle();
     Global_DG->find_fvs();

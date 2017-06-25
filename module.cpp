@@ -33,67 +33,72 @@ void Module::setInOutWires() {
         stringstream ssLine(module_code[i]);
         ssLine >> buf;
         if (buf=="input") {
-            if (ssLine>>buf && buf[0]=='[') {
-                int n1 = buf.find(':');
-                int max = stoi(buf.substr(1, n1-1));
-                int n2 = buf.find(']');
-                int min = stoi(buf.substr(n1+1, n2-n1-1));
-                ssLine >> buf;
-                //buf.pop_back();
-                for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+" "+to_string(i);
-                    Wire* new_wire = new Wire(new_wire_name);
+            while (ssLine>>buf) {
+                if (buf[0]=='[') {
+                    int n1 = buf.find(':');
+                    int max = stoi(buf.substr(1, n1-1));
+                    int n2 = buf.find(']');
+                    int min = stoi(buf.substr(n1+1, n2-n1-1));
+                    ssLine >> buf;
+                    //buf.pop_back();
+                    for (int i=min; i<=max; ++i) {
+                        string new_wire_name = buf+" "+to_string(i);
+                        Wire* new_wire = new Wire(new_wire_name);
+                        input_ports.push_back(new_wire);
+                        wires.push_back(new_wire);
+                    }
+                }
+                else {
+                    if (buf[buf.length()-1]==',') {buf.pop_back();}
+                    Wire* new_wire = new Wire(buf);
                     input_ports.push_back(new_wire);
                     wires.push_back(new_wire);
                 }
             }
-            else {
-                //buf.pop_back();
-                Wire* new_wire = new Wire(buf);
-                input_ports.push_back(new_wire);
-                wires.push_back(new_wire);
-            }
         }
         else if (buf=="output") {
-            if (ssLine>>buf && buf[0]=='[') {
-                int n1 = buf.find(':');
-                int max = stoi(buf.substr(1, n1-1));
-                int n2 = buf.find(']');
-                int min = stoi(buf.substr(n1+1, n2-n1-1));
-                ssLine >> buf;
-                //buf.pop_back();
-                for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+" "+to_string(i); 
-                    Wire* new_wire = new Wire(new_wire_name);
+            while (ssLine>>buf) {
+                if (ssLine>>buf && buf[0]=='[') {
+                    int n1 = buf.find(':');
+                    int max = stoi(buf.substr(1, n1-1));
+                    int n2 = buf.find(']');
+                    int min = stoi(buf.substr(n1+1, n2-n1-1));
+                    ssLine >> buf;
+                    //buf.pop_back();
+                    for (int i=min; i<=max; ++i) {
+                        string new_wire_name = buf+" "+to_string(i); 
+                        Wire* new_wire = new Wire(new_wire_name);
+                        output_ports.push_back(new_wire);
+                        wires.push_back(new_wire);
+                    }
+                }
+                else {
+                    if (buf[buf.length()-1]==',') {buf.pop_back();}
+                    Wire* new_wire = new Wire(buf);
                     output_ports.push_back(new_wire);
                     wires.push_back(new_wire);
                 }
             }
-            else {
-                //buf.pop_back();
-                Wire* new_wire = new Wire(buf);
-                output_ports.push_back(new_wire);
-                wires.push_back(new_wire);
-            }
         }
         else if (buf=="wire") {
-            if (ssLine>>buf && buf[0]=='[') {
-                int n1 = buf.find(':');
-                int max = stoi(buf.substr(1, n1-1));
-                int n2 = buf.find(']');
-                int min = stoi(buf.substr(n1+1, n2-n1-1));
-                ssLine >> buf;
-                //buf.pop_back();
-                for (int i=min; i<=max; ++i) {
-                    string new_wire_name = buf+" "+to_string(i); 
-                    Wire* new_wire = new Wire(new_wire_name);
+            while (ssLine>>buf) {
+                if (ssLine>>buf && buf[0]=='[') {
+                    int n1 = buf.find(':');
+                    int max = stoi(buf.substr(1, n1-1));
+                    int n2 = buf.find(']');
+                    int min = stoi(buf.substr(n1+1, n2-n1-1));
+                    ssLine >> buf;
+                    for (int i=min; i<=max; ++i) {
+                        string new_wire_name = buf+" "+to_string(i); 
+                        Wire* new_wire = new Wire(new_wire_name);
+                        wires.push_back(new_wire);
+                    }
+                }
+                else {
+                    if (buf[buf.length()-1]==',') {buf.pop_back();}
+                    Wire* new_wire = new Wire(buf);
                     wires.push_back(new_wire);
                 }
-            }
-            else {
-                //buf.pop_back();
-                Wire* new_wire = new Wire(buf);
-                wires.push_back(new_wire);
             }
         }
         else if (buf=="assign") {}
@@ -101,7 +106,7 @@ void Module::setInOutWires() {
     }
 }
 
-void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const vector<Module*> module_lib) {
+void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const vector<Module*> module_lib, DGraph* DG) {
     cout << module_type << " " << module_name << "building graph..." << endl;
     if (is_combinational) {
         for (auto& pi: PI_list) {
@@ -122,12 +127,12 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
             if (type!="input" && type!="output" && type!="wire" && type!="assign") { break; }
         }
 
-        for (int j=i; j<module_code.size(); ++j) {
+        for (int j=i; j!=module_code.size()-1; ++j) {
             stringstream ssLine(module_code[j]);
             ssLine >> type >> name;
             Module module_instance(type, name);
 
-            if (type=="DFFQX1") { this->DFF_parse_and_link(module_code[i], &module_instance); }
+            if (type=="DFFQX1" || type=="EDFFX1") { this->DFF_parse_and_link(module_code[i], &module_instance); }
             else {
                 for (int k=0; k!=module_lib.size(); ++k) {
                     if (type==module_lib[k]->module_type) {
@@ -147,12 +152,12 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
         vector<Node*> contructed_node_list;
         for (int i=0; i!=input_ports.size(); ++i) {
             this->dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list,
-             contructed_node_list);
+             contructed_node_list, DG);
         }
 
         for (int i=0; i!=breakdown_module_list.size(); ++i) {
             Node* broken_node = breakdown_node_list[i];
-            breakdown_module_list[i]->build_graph(broken_node->get_fanin_list(), broken_node->get_fanout_list(), module_lib);
+            breakdown_module_list[i]->build_graph(broken_node->get_fanin_list(), broken_node->get_fanout_list(), module_lib, DG);
         }
     }
 }
@@ -164,7 +169,6 @@ void dispose_parentheses(string& type, string& name, const string& code) {
     type = code.substr(1, start-1);
     name = code.substr(start+1, end-start-1);
 }
-
 void Module::DFF_parse_and_link(const string& line_code, Module* module_instance) {
     stringstream ss(line_code);
     string buffer;
@@ -196,6 +200,7 @@ void Module::module_parse_and_link(const string& line_code, Module* module_insta
         if (buffer==")") {break;}
         string wire_type, wire_name;
         dispose_parentheses(wire_type, wire_name, buffer);
+        if (wire_name=="1'b0") {continue;}
         vector<string> instance_wire_array, wire_array;
         module_instance->get_wire_array(wire_type, instance_wire_array);
         get_wire_array(wire_name, wire_array);
@@ -265,7 +270,8 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
 }
 
 void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
-     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& contructed_node_list) {
+     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& contructed_node_list,
+      DGraph* DG) {
     for (auto& pi_wire: output_ports) {
         if (start_wire==pi_wire) {
             for (auto& i_node: start_node_list) {
@@ -289,12 +295,13 @@ void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_li
             }
             if (!inserted) {
                 Node* dff_node = new Node(module->module_name);
+                DG->add_node(*dff_node);
                 cout << "contructing node..." << module->module_name << endl;
                 contructed_node_list.push_back(dff_node);
                 for (auto& start_node: start_node_list) { start_node->add_fanout(dff_node); }
                 vector<Node*> nl = {dff_node};
                 for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
-                 breakdown_node_list, breakdown_module_list, contructed_node_list); }
+                 breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
             }
         }
         else {
@@ -312,19 +319,20 @@ void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_li
                     }
                     if (!inserted) {
                         Node* module_node = new Node(module->module_name);
+                        DG->add_node(*module_node);
                         contructed_node_list.push_back(module_node);
                         breakdown_node_list.push_back(module_node);
                         breakdown_module_list.push_back(module);
                         for (auto& start_node: start_node_list) { start_node->add_fanout(module_node); }
                         vector<Node*> nl = {module_node};
                         for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
-                            breakdown_node_list, breakdown_module_list, contructed_node_list); }
+                            breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
                     }
                 }
             }
             if (!is_breakdown_module) {
                 for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, start_node_list,
-                 end_node_list, breakdown_node_list, breakdown_module_list, contructed_node_list); }
+                 end_node_list, breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
             }
         }
     }

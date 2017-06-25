@@ -40,7 +40,7 @@ public:
 
 	void module_including(const vector<Module*>&);
 	const vector<string>& get_module_code() { return module_code; }
-	void build_graph(vector<Node*>&, vector<Node*>&, const vector<Module*>);
+	void build_graph(vector<Node*>&, vector<Node*>&, const vector<Module*>, DGraph*);
     void add_fanin(Wire* wire) { input_ports.push_back(wire); }
     void add_fanout(Wire* wire) { output_ports.push_back(wire); }
     vector<Wire*>& get_input_ports() {return input_ports;}
@@ -58,7 +58,7 @@ private:
     void DFF_parse_and_link(const string&, Module*);
     void module_parse_and_link(const string&, Module*);
     void gate_parse_and_link(const string&, Module*);
-    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&);
+    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&, DGraph*);
     
     vector<string> module_code; // each element in vector contain one line of code of the module
     set<Module*> module_include_set;
