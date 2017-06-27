@@ -2,15 +2,16 @@
 #include "module.h"
 using namespace std;
 
-// a[5]; a[3:0]; a (input [7:0] a)
 bool Wire::is_equal(const string& check) {
     if (check==name) {return true;}
     else if (check.find('[')!=string::npos) {
         int start = check.find('[');
         int end = check.find(']', start);
-        string idx = check.substr(start, end-start);
-        string cmp = check.substr(0, start+1) + " " + idx;
-        return cmp == idx;
+        string idx = check.substr(start+1, end-start-1);
+        string cmp = check.substr(0, start);
+        //while (cmp[cmp.length()-1]==' ') {cmp.pop_back();}
+        cmp = cmp + " " + idx;
+        return cmp == name;
     }
     else { return false; }
 }
@@ -58,7 +59,7 @@ void Module::setInOutWires() {
         }
         else if (buf=="output") {
             while (ssLine>>buf) {
-                if (ssLine>>buf && buf[0]=='[') {
+                if (buf[0]=='[') {
                     int n1 = buf.find(':');
                     int max = stoi(buf.substr(1, n1-1));
                     int n2 = buf.find(']');
@@ -82,7 +83,7 @@ void Module::setInOutWires() {
         }
         else if (buf=="wire") {
             while (ssLine>>buf) {
-                if (ssLine>>buf && buf[0]=='[') {
+                if (buf[0]=='[') {
                     int n1 = buf.find(':');
                     int max = stoi(buf.substr(1, n1-1));
                     int n2 = buf.find(']');
@@ -127,23 +128,27 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
             if (type!="input" && type!="output" && type!="wire" && type!="assign") { break; }
         }
 
+        vector<Module*> tmp_module_list;
         for (int j=i; j!=module_code.size()-1; ++j) {
             stringstream ssLine(module_code[j]);
             ssLine >> type >> name;
-            Module module_instance(type, name);
+            Module* module_instance = new Module(type, name);
+            tmp_module_list.push_back(module_instance);
 
-            if (type=="DFFQX1" || type=="EDFFX1") { this->DFF_parse_and_link(module_code[i], &module_instance); }
+            if (type=="DFFQX1") { DFF_parse_and_link(module_code[j], module_instance); }
+            //else if (type=="EDFFX1") {EDFF_parse_and_link(module_code[i], &module_instance);}
+            else if (type=="EDFFX1") {}
             else {
                 for (int k=0; k!=module_lib.size(); ++k) {
                     if (type==module_lib[k]->module_type) {
-                        module_instance.get_input_ports() = module_lib[k]->get_input_ports();
-                        module_instance.get_output_ports() = module_lib[k]->get_output_ports();
-                        module_instance.get_wires() = module_lib[k]->get_wires();
-                        this->module_parse_and_link(module_code[i], &module_instance);
+                        module_instance->get_input_ports() = module_lib[k]->get_input_ports();
+                        module_instance->get_output_ports() = module_lib[k]->get_output_ports();
+                        module_instance->get_wires() = module_lib[k]->get_wires();
+                        module_parse_and_link(module_code[j], module_instance);
                         break;
                     }
                 }
-                module_instance.gate_parse_and_link(module_code[i], &module_instance);
+                gate_parse_and_link(module_code[j], module_instance);
             }
         }
 
@@ -151,7 +156,7 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
         vector<Module*> breakdown_module_list;
         vector<Node*> contructed_node_list;
         for (int i=0; i!=input_ports.size(); ++i) {
-            this->dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list,
+            dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list,
              contructed_node_list, DG);
         }
 
@@ -159,6 +164,7 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
             Node* broken_node = breakdown_node_list[i];
             breakdown_module_list[i]->build_graph(broken_node->get_fanin_list(), broken_node->get_fanout_list(), module_lib, DG);
         }
+        for (auto& mod: tmp_module_list) {delete mod;}
     }
 }
 
@@ -192,6 +198,31 @@ void Module::DFF_parse_and_link(const string& line_code, Module* module_instance
     }   
     return;
 }
+/*
+void Module::EDFF_parse_and_link(const string& line_code, Module* module_instance) {
+    stringstream ss(line_code);
+    string buffer;
+    ss >> buffer >> buffer >> buffer >> buffer;
+    string wire_type;
+    string in_name;
+    dispose_parentheses(wire_type, in_name, buffer);
+    ss >> buffer >> buffer;
+    string out_name;
+    dispose_parentheses(wire_type, out_name, buffer);
+    //cout << in_name << out_name;
+    for (auto& w: wires) {
+        if (w->is_equal(in_name)) {
+            w->add_fanout(module_instance);
+            module_instance->add_fanin(w);
+        }
+        else if (w->is_equal(out_name)) {
+            w->add_fanin(module_instance);
+            module_instance->add_fanout(w);
+        }
+    }   
+    return;
+}
+*/
 void Module::module_parse_and_link(const string& line_code, Module* module_instance) {
     stringstream ss(line_code);
     string buffer;
@@ -242,9 +273,14 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
     module_instance->set_combinational();
     stringstream ss(line_code);
     string buffer;
-    ss >> buffer >> buffer >> buffer >> buffer;
+    ss >> buffer >> buffer >> buffer;
     while (ss>>buffer) {
-        if (buffer==")") {break;}
+        if (buffer==");") {break;}
+        while (buffer.find(')')==string::npos) {
+            string subbuf;
+            ss >> subbuf;
+            buffer += subbuf;
+        }
         string wire_type, wire_name;
         dispose_parentheses(wire_type, wire_name, buffer);
         if (wire_type=="CO" || wire_type=="S" || wire_type=="Y") {
