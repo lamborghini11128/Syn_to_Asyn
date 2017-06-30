@@ -29,7 +29,7 @@ void Module::setModuleType() {
 
 void Module::setInOutWires() {
     string buf;
-    cout << module_type << endl;
+    cout << module_type << " setting in/out wires" << endl;
     for (int i=1; i<module_code.size(); ++i) {
         stringstream ssLine(module_code[i]);
         ssLine >> buf;
@@ -136,8 +136,7 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
             tmp_module_list.push_back(module_instance);
 
             if (type=="DFFQX1") { DFF_parse_and_link(module_code[j], module_instance); }
-            //else if (type=="EDFFX1") {EDFF_parse_and_link(module_code[i], &module_instance);}
-            else if (type=="EDFFX1") {}
+            else if (type=="EDFFX1") {EDFF_parse_and_link(module_code[i], module_instance);}
             else {
                 for (int k=0; k!=module_lib.size(); ++k) {
                     if (type==module_lib[k]->module_type) {
@@ -154,16 +153,18 @@ void Module::build_graph(vector<Node*>& PI_list, vector<Node*>& PO_list, const v
 
         vector<Node*> breakdown_node_list;
         vector<Module*> breakdown_module_list;
-        vector<Node*> contructed_node_list;
+        vector<Node*> constructed_node_list;
         for (int i=0; i!=input_ports.size(); ++i) {
             dfs_circuit_to_graph(input_ports[i], PI_list, PO_list, breakdown_node_list, breakdown_module_list,
-             contructed_node_list, DG);
+             constructed_node_list);
         }
 
         for (int i=0; i!=breakdown_module_list.size(); ++i) {
             Node* broken_node = breakdown_node_list[i];
             breakdown_module_list[i]->build_graph(broken_node->get_fanin_list(), broken_node->get_fanout_list(), module_lib, DG);
         }
+
+        for (auto& node: constructed_node_list) {DG->add_node(*node);}
         for (auto& mod: tmp_module_list) {delete mod;}
     }
 }
@@ -185,7 +186,6 @@ void Module::DFF_parse_and_link(const string& line_code, Module* module_instance
     ss >> buffer >> buffer;
     string out_name;
     dispose_parentheses(wire_type, out_name, buffer);
-    //cout << in_name << out_name;
     for (auto& w: wires) {
         if (w->is_equal(in_name)) {
             w->add_fanout(module_instance);
@@ -198,20 +198,27 @@ void Module::DFF_parse_and_link(const string& line_code, Module* module_instance
     }   
     return;
 }
-/*
+//   EDFFX1 \out_reg[4]  ( .D(N1827), .E(n1861), .CK(clk), .Q(out[4]) );
 void Module::EDFF_parse_and_link(const string& line_code, Module* module_instance) {
     stringstream ss(line_code);
     string buffer;
     ss >> buffer >> buffer >> buffer >> buffer;
     string wire_type;
-    string in_name;
-    dispose_parentheses(wire_type, in_name, buffer);
+    string in1_name;
+    dispose_parentheses(wire_type, in1_name, buffer);
+    ss >> buffer;
+    string in2_name;
+    dispose_parentheses(wire_type, in2_name, buffer);
     ss >> buffer >> buffer;
     string out_name;
     dispose_parentheses(wire_type, out_name, buffer);
     //cout << in_name << out_name;
     for (auto& w: wires) {
-        if (w->is_equal(in_name)) {
+        if (w->is_equal(in1_name)) {
+            w->add_fanout(module_instance);
+            module_instance->add_fanin(w);
+        }
+        else if (w->is_equal(in2_name)) {
             w->add_fanout(module_instance);
             module_instance->add_fanin(w);
         }
@@ -222,7 +229,6 @@ void Module::EDFF_parse_and_link(const string& line_code, Module* module_instanc
     }   
     return;
 }
-*/
 void Module::module_parse_and_link(const string& line_code, Module* module_instance) {
     stringstream ss(line_code);
     string buffer;
@@ -306,10 +312,9 @@ void Module::gate_parse_and_link(const string& line_code, Module* module_instanc
 }
 
 void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_list, vector<Node*>& end_node_list,
-     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& contructed_node_list,
-      DGraph* DG) {
-    for (auto& pi_wire: output_ports) {
-        if (start_wire==pi_wire) {
+     vector<Node*>& breakdown_node_list, vector<Module*>& breakdown_module_list, vector<Node*>& constructed_node_list) {
+    for (auto& out_wire: output_ports) {
+        if (start_wire==out_wire) {
             for (auto& i_node: start_node_list) {
                 for (auto& o_node: end_node_list) {
                     i_node->add_fanout(o_node);
@@ -320,33 +325,36 @@ void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_li
         }
     }
     for (auto& module: start_wire->get_fanout()) {
-        if (module->module_type=="DFFQX1") {
-            bool inserted = false;
-            for (auto& node: contructed_node_list) {
-                if (node->name==module->module_name) {
-                    for (auto& start_node: start_node_list) { start_node->add_fanout(node); }
-                    inserted = true;
-                    break;
+        if (module->module_type=="DFFQX1" || module->module_type=="EDFFX1") {
+            if (module->node_id!=-1) {
+                for (auto& start_node: start_node_list) {
+                    start_node->add_fanout(constructed_node_list[module->node_id]); 
+                    constructed_node_list[module->node_id]->add_fanin(start_node);
                 }
+                return;
             }
-            if (!inserted) {
-                Node* dff_node = new Node(module->module_name);
-                DG->add_node(*dff_node);
+            else {
+                Node* dff_node = new Node(module->module_name, constructed_node_list.size());
                 cout << "contructing node..." << module->module_name << endl;
-                contructed_node_list.push_back(dff_node);
-                for (auto& start_node: start_node_list) { start_node->add_fanout(dff_node); }
+                module->node_id=constructed_node_list.size();
+                constructed_node_list.push_back(dff_node);
+                for (auto& start_node: start_node_list) {
+                    start_node->add_fanout(dff_node);
+                    dff_node->add_fanin(start_node);
+                }
                 vector<Node*> nl = {dff_node};
-                for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
-                 breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
+                for (auto& out_wire: module->get_output_ports()) { dfs_circuit_to_graph(out_wire, nl, end_node_list,
+                 breakdown_node_list, breakdown_module_list, constructed_node_list); }
             }
         }
         else {
+            /*
             bool is_breakdown_module=false;
             for (auto& m: module_include_set) {
                 bool inserted = false;
                 if (m->module_type==module->module_type) {
                     is_breakdown_module = true;
-                    for (auto& n: contructed_node_list) {
+                    for (auto& n: constructed_node_list) {
                         if (n->name==module->module_name) {
                             for (auto& start_node:start_node_list) { start_node->add_fanout(n); }
                             inserted = true;
@@ -354,22 +362,26 @@ void Module::dfs_circuit_to_graph(Wire* start_wire, vector<Node*>& start_node_li
                         }
                     }
                     if (!inserted) {
-                        Node* module_node = new Node(module->module_name);
-                        DG->add_node(*module_node);
-                        contructed_node_list.push_back(module_node);
+                        Node* module_node = new Node(module->module_name, constructed_node_list.size());
+                        constructed_node_list.push_back(module_node);
                         breakdown_node_list.push_back(module_node);
                         breakdown_module_list.push_back(module);
                         for (auto& start_node: start_node_list) { start_node->add_fanout(module_node); }
                         vector<Node*> nl = {module_node};
-                        for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, end_node_list,
-                            breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
+                        for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, nl, 
+                            end_node_list, breakdown_node_list, breakdown_module_list, constructed_node_list); }
                     }
                 }
             }
+            */
+            for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, start_node_list,
+                end_node_list, breakdown_node_list, breakdown_module_list, constructed_node_list); }
+                /*
             if (!is_breakdown_module) {
                 for (auto& out_wire: module->get_output_ports()) { this->dfs_circuit_to_graph(out_wire, start_node_list,
-                 end_node_list, breakdown_node_list, breakdown_module_list, contructed_node_list, DG); }
+                 end_node_list, breakdown_node_list, breakdown_module_list, constructed_node_list); }
             }
+            */
         }
     }
     return;

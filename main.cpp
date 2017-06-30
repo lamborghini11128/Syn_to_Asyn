@@ -35,6 +35,10 @@ void file_parser(const char* gate_file)
     bool is_reading=false;
     // read in the module code and construct module_lib
     while (getline(fgate_file, line)) {
+        /*if (line[0]=='m') {
+            fgate_file.seekg(0);
+            break;
+        }*/
         if (fgate_file.peek() == 'm') {break;}
     }
     while (getline(fgate_file, line)) {
@@ -75,19 +79,24 @@ void file_parser(const char* gate_file)
     
     // build DG
     Global_DG = new DGraph();
-    Node PI_node, PO_node;
+    Node PI_node("PI", -4), PO_node("PO", -3);
     vector<Node*> PI; PI.push_back(&PI_node);
     vector<Node*> PO; PO.push_back(&PO_node);
     for (int i=0; i<top_module_list.size(); ++i) {
         top_module_list[i]->build_graph(PI, PO, module_lib, Global_DG);
     }
-    Global_DG->find_cycle();
-    Global_DG->find_fvs();
+    Global_DG->add_node(PI_node);
+    Global_DG->add_node(PO_node);
 
-    for (int i=0; i<module_lib.size(); ++i)    {
+    //Global_DG->find_cycle();
+    //Global_DG->find_fvs();
+
+    for (int i=0; i<module_lib.size(); ++i) {
         for (auto& wire: module_lib[i]->get_wires()) {delete wire;}
         delete module_lib[i];
     }
+
+    Global_DG->print_list();
 }
 
 void graph_generator()

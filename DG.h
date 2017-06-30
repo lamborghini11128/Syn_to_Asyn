@@ -11,12 +11,22 @@ class Node
 {
     public:
         Node();
-        Node(string name): name(name) {}
+        Node(string name, int id): name(name), id(id) {}
         ~Node();
 
     // Graph generation
-        void add_fanin(Node* node)  { fanin_list.push_back(node); }
-        void add_fanout(Node* node) { fanout_list.push_back(node); }
+        void add_fanin(Node* node)  {
+            for (int i=0; i!=fanin_list.size(); ++i) {
+                if (node->name == fanin_list[i]->name) return;
+            }
+            fanin_list.push_back(node);
+        }
+        void add_fanout(Node* node) {
+            for (int i=0; i!=fanout_list.size(); ++i) {
+                if (node->name == fanout_list[i]->name) return;
+            }
+            fanout_list.push_back(node);
+        }
         vector<Node*>& get_fanin_list() { return fanin_list; }
         vector<Node*>& get_fanout_list() { return fanout_list; }
         string name;
@@ -61,6 +71,16 @@ class DGraph
         ~DGraph();
     //Graph generation part
         void add_node(const Node& newNode) { node_list.push_back(newNode); }
+        const void print_list() {
+            for(int i=0; i!=node_list.size(); ++i) {
+                cout << node_list[i].name << endl;
+                cout << "   fanin:  ";
+                for (int j=0; j<node_list[i].get_fanin_list().size(); ++j) {cout << node_list[i].get_fanin(j)->name << " ";}
+                cout << endl << "   fanout: ";
+                for (int j=0; j<node_list[i].get_fanout_list().size(); ++j) {cout << node_list[i].get_fanout(j)->name << " ";}
+                cout << endl << endl;
+            }
+        }
         
     //Detect cycle part
         void find_cycle();

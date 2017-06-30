@@ -34,8 +34,9 @@ public:
 		setInOutWires();
 		combinationalCheck();
 		is_included=false;
+        node_id=-1;
 	}
-	Module(const string& type, const string& name): module_type(type), module_name(name) {}
+	Module(const string& type, const string& name): module_type(type), module_name(name) {node_id=-1;}
 	~Module();
 
 	void module_including(const vector<Module*>&);
@@ -49,6 +50,7 @@ public:
 	string module_type;
 	string module_name;
     bool is_included;
+    int node_id;
     void set_combinational() {is_combinational=true;}
     void combinationalCheck();  // check if the module is combinational
     void get_wire_array(string, vector<string>&);
@@ -56,9 +58,10 @@ private:
     void setModuleType();
     void setInOutWires();
     void DFF_parse_and_link(const string&, Module*);
+    void EDFF_parse_and_link(const string&, Module*);
     void module_parse_and_link(const string&, Module*);
     void gate_parse_and_link(const string&, Module*);
-    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&, DGraph*);
+    void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&);
     
     vector<string> module_code; // each element in vector contain one line of code of the module
     set<Module*> module_include_set;
@@ -66,7 +69,6 @@ private:
     vector<Wire*> input_ports;
     vector<Wire*> output_ports;
     vector<Wire*> wires;
-	//DGraph module_graph;
 };
 
 #endif
