@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <stdio.h>
 #include <vector>
 #include "Cycle.h"
 #include "Cycle_list.h"
@@ -73,12 +74,12 @@ class DGraph
         void add_node(const Node& newNode) { node_list.push_back(newNode); }
         const void print_list() {
             for(int i=0; i!=node_list.size(); ++i) {
-                cout << node_list[i].name << endl;
-                cout << "   fanin:  ";
-                for (int j=0; j<node_list[i].get_fanin_list().size(); ++j) {cout << node_list[i].get_fanin(j)->name << " ";}
-                cout << endl << "   fanout: ";
-                for (int j=0; j<node_list[i].get_fanout_list().size(); ++j) {cout << node_list[i].get_fanout(j)->name << " ";}
-                cout << endl << endl;
+                cout << i+1 << ": " << node_list[i].name << endl;
+                cout << "  fanin:  ";
+                for (int j=0; j!=node_list[i].get_fanin_size(); ++j) {printf("%s ", node_list[i].get_fanin(j)->name.c_str());}
+                cout <<endl<< "  fanout: ";
+                for (int j=0; j!=node_list[i].get_fanout_size(); ++j) {printf("%s ", node_list[i].get_fanout(j)->name.c_str());}
+                cout << endl<<endl;
             }
         }
         

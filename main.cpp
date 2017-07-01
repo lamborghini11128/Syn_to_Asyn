@@ -27,6 +27,7 @@ int main(int argc, char** argv)
 void file_parser(const char* gate_file)
 {
     fstream fgate_file(gate_file);
+    if (!fgate_file.is_open()) {cout <<"open failed..."<<endl; return;}
     vector<Module*> module_lib;
 
     vector<Module*> top_module_list;
