@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <stdlib.h> 
+#include <string>
 #include "DG.h"
 #include "module.h"
 
@@ -15,7 +17,11 @@ void dfs();
 int main(int argc, char** argv)     
 {
     if( argc == 1 )
+    {
         graph_generator();
+	Global_DG->find_cycle();
+	//Global_DG->find_fvs();
+    }
     else if( argc == 2 )
     {
         file_parser(argv[1]);
@@ -100,9 +106,68 @@ void file_parser(const char* gate_file)
     Global_DG->print_list();
 }
 
+void graph_generator (int node_num, float connection_rate)     //node_num should bigger than 5, connection_rate should in 0~1
+{
+	if (node_num<=5||connection_rate>1||connection_rate<0)
+		return;
+
+
+	vector <Node*> temp_node_list;
+
+
+	for (int i=0;i<node_num;i++)              //add empty node
+	{
+		temp_node_list.push_back(new Node(to_string(i),i));
+	}	
+	cout << "add empty node done" << endl;
+
+	for(int i=0; i<5;i++)				//construct pi connection
+	{
+		for (int j=5;j<node_num;j++)
+		{
+			if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
+			{
+				temp_node_list[i]->add_fanout(temp_node_list[j]);
+				temp_node_list[j]->add_fanin(temp_node_list[i]);
+				
+			}	
+		}	
+	}
+
+	cout << "construct pi connection done " << endl;
+	for(int i=5; i<node_num;i++)			//construct normal node connection
+	{
+		for (int j=5;j<node_num;j++)
+		{
+			if (i==j)
+				continue;
+			else if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
+			{
+				temp_node_list[i]->add_fanout(temp_node_list[j]);
+				temp_node_list[j]->add_fanin(temp_node_list[i]);
+				
+			}	
+		}	
+	}
+
+	Global_DG = new DGraph();
+	for (int i=0;i<node_num;i++)
+	{
+		Global_DG->add_node(*(temp_node_list[i]));
+	}
+
+
+	cout << "generate done" << endl;
+	
+	
+}
+
 void graph_generator()
 {
+	graph_generator (1024,0.01);
+	
 }
+
 
 void graph_analysis()
 {
