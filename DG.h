@@ -31,6 +31,7 @@ class Node
         vector<Node*>& get_fanin_list() { return fanin_list; }
         vector<Node*>& get_fanout_list() { return fanout_list; }
         string name;
+	int id;
         
     //Detect cycle part
         Node* get_fanin(int i) {return fanin_list[i];}
@@ -40,6 +41,8 @@ class Node
         Cycle* get_cycle(int i) {return cycle_list[i];}
         void add_cycle(Cycle* c) {cycle_list.push_back(c);}
         int get_cycle_size() {return cycle_list.size();}
+        void set_node_DFS_id (int i) {DFS_id=i;}
+        int get_node_DFS_id () {return DFS_id;}
         void set_node_id (int i) {id=i;}
         int get_node_id () {return id;}
         void set_in_stack_or_not (bool s) {in_stack_or_not=s;}
@@ -55,9 +58,9 @@ class Node
     
     //Detect cycle part
         vector <Cycle*> cycle_list;         //cycles that contain the node
-        int id;                             //DFS id in stack
+        int DFS_id;                             //DFS id in stack
         bool in_stack_or_not;               //flag indicate that the node is currently in stack or not
-        bool in_cycle_or_not;               //flag indicate that the node is currently in cycle or not
+        //bool in_cycle_or_not;               //flag indicate that the node is currently in cycle or not
         bool traversed_or_not;              //flag indicate that the node is traversed or not
         
 };
@@ -90,13 +93,14 @@ class DGraph
         void add_node_to_fvs(Node* n) {fvs.push_back(n);}
         int get_fvs_size() {return fvs.size();}
         Node* get_fvs_node (int i) {return fvs[i];}
+	Node& get_node (int i) {return node_list[i];}
 
     private:
         vector< Node > node_list;           
 
 
     //Detect cycle part
-        Cycle_list* cycle_list;       //the list of cycle_list, for each cycle_list, cycles in which share some same nodes
+        Cycle_list* cycle_list;       
         vector<Node*> fvs;
 };
 
