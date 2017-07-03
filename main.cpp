@@ -42,15 +42,9 @@ void file_parser(const char* gate_file)
     bool is_reading=false;
     // read in the module code and construct module_lib
     while (getline(fgate_file, line)) {
-        /*if (line[0]=='m') {
-            fgate_file.seekg(0);
-            break;
-        }*/
         if (fgate_file.peek() == 'm') {break;}
     }
     while (getline(fgate_file, line)) {
-        //while (line[0]=='\n') {line = line.substr(1);}
-        //while (line.find('\n')!=string::npos) {line[line.find('\n')]=' ';}
         while (line[line.length()-1]!=';') {
             if (line=="endmodule") {break;}
             string tail;
@@ -95,8 +89,6 @@ void file_parser(const char* gate_file)
     Global_DG->add_node(PI_node);
     Global_DG->add_node(PO_node);
 
-    //Global_DG->find_cycle();
-    //Global_DG->find_fvs();
     Global_DG->print_list();
 
     for (int i=0; i<module_lib.size(); ++i) {
