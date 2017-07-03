@@ -91,13 +91,13 @@ void file_parser(const char* gate_file)
 
     //Global_DG->find_cycle();
     //Global_DG->find_fvs();
+    Global_DG->print_list();
 
     for (int i=0; i<module_lib.size(); ++i) {
         for (auto& wire: module_lib[i]->get_wires()) {delete wire;}
         delete module_lib[i];
     }
 
-    Global_DG->print_list();
 }
 
 void graph_generator()
