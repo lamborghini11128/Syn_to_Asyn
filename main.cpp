@@ -20,7 +20,8 @@ int main(int argc, char** argv)
     {
         graph_generator();
 	Global_DG->find_cycle();
-	//Global_DG->find_fvs();
+	Global_DG->find_fvs();
+	Global_DG->print_status();
     }
     else if( argc == 2 )
     {
@@ -119,6 +120,13 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 	{
 		temp_node_list.push_back(new Node(to_string(i),i));
 	}	
+
+
+	Global_DG = new DGraph();
+	for (int i=0;i<node_num;i++)
+	{
+		Global_DG->add_node(*(temp_node_list[i]));
+	}
 	cout << "add empty node done" << endl;
 
 	for(int i=0; i<5;i++)				//construct pi connection
@@ -127,8 +135,8 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 		{
 			if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
 			{
-				temp_node_list[i]->add_fanout(temp_node_list[j]);
-				temp_node_list[j]->add_fanin(temp_node_list[i]);
+				Global_DG->get_node(i).add_fanout(&(Global_DG->get_node(j)));
+				Global_DG->get_node(j).add_fanin(&(Global_DG->get_node(i)));
 				
 			}	
 		}	
@@ -143,18 +151,13 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 				continue;
 			else if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
 			{
-				temp_node_list[i]->add_fanout(temp_node_list[j]);
-				temp_node_list[j]->add_fanin(temp_node_list[i]);
+				Global_DG->get_node(i).add_fanout(&(Global_DG->get_node(j)));
+				Global_DG->get_node(j).add_fanin(&(Global_DG->get_node(i)));
 				
 			}	
 		}	
 	}
 
-	Global_DG = new DGraph();
-	for (int i=0;i<node_num;i++)
-	{
-		Global_DG->add_node(*(temp_node_list[i]));
-	}
 
 
 	cout << "generate done" << endl;
@@ -164,7 +167,7 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 
 void graph_generator()
 {
-	graph_generator (1024,0.01);
+	graph_generator (10,0.4);
 	
 }
 

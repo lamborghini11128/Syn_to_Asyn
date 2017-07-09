@@ -89,6 +89,7 @@ class DGraph
     //Detect cycle part
         void find_cycle();
         void find_fvs();
+	void print_status();
         Cycle_list* get_cycle_list() {return cycle_list;}         
         void add_node_to_fvs(Node* n) {fvs.push_back(n);}
         int get_fvs_size() {return fvs.size();}
