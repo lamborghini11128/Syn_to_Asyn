@@ -13,7 +13,7 @@ class Module;
 class Wire
 {
 public:
-	Wire(string& name): name(name), mark(0) {}
+	Wire(string& name): name(name), mark(-1) {}
 	void add_fanin(Module* gate) { fanin.push_back(gate); }
 	void add_fanout(Module* gate) { fanout.push_back(gate); }
 	bool is_equal(const string& check);
@@ -38,7 +38,6 @@ public:
         module_id=-1;
 	}
 	Module(const string& type, const string& name): module_type(type), module_name(name) {module_id=-1;}
-	~Module();
 
 	void module_including(const vector<Module*>&);
 	const vector<string>& get_module_code() { return module_code; }
@@ -59,12 +58,14 @@ private:
     void setModuleType();
     void setInOutWires();
     void DFF_parse_and_link(const string&, Module*);
-    void EDFF_parse_and_link(const string&, Module*);
-    void DFFRX1_parse_and_link(const string&, Module*);
-    void module_parse_and_link(const string&, Module*);
+    void EDFF_parse_and_link(const string&, Module*, Module*);
+    void DFFRX1_parse_and_link(const string&, Module*, Module*);
+    //void module_parse_and_link(const string&, Module*);
     void gate_parse_and_link(const string&, Module*);
     void dfs_circuit_to_graph(Wire*, vector<Node*>&, vector<Node*>&, vector<Node*>&, vector<Module*>&, vector<Node*>&, int depth=0);
-    void dfs_circuit_to_graph_prime(vector<Node*>&);
+    void dfs_circuit_to_graph_prime(vector<Node*>&, vector<Node*>&, vector<Node*>&);
+    void dfs(vector<Node*>&, Node*, Node*);
+    void remove_gate_node(vector<Node*> &);
     
     vector<string> module_code; // each element in vector contain one line of code of the module
     set<Module*> module_include_set;
