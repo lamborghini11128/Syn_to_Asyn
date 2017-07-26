@@ -89,18 +89,18 @@ class DGraph
     //Detect cycle part
         void find_cycle();
         void find_fvs();
-	void print_status();
+	    void print_status();
         Cycle_list* get_cycle_list() {return cycle_list;}         
         void add_node_to_fvs(Node* n) {fvs.push_back(n);}
         int get_fvs_size() {return fvs.size();}
         Node* get_fvs_node (int i) {return fvs[i];}
-	Node& get_node (int i) {return node_list[i];}
+	    Node& get_node (int i) {return node_list[i];}
 
     private:
         vector< Node > node_list;           
 
 
-    //Detect cycle part
+        //Detect cycle part
         Cycle_list* cycle_list;       
         vector<Node*> fvs;
 };
