@@ -7,15 +7,17 @@
 #ifndef DG_H
 #define DG_H
 using namespace std;
-
+class Gate;
 class Node
 {
     public:
         Node();
         Node(string name, int id): name(name), id(id) {}
+        Node(string name, int id, Gate* g): name(name), id(id), DFF(g) {}
+       
         ~Node();
 
-    // Graph generation
+        // Graph generation
         void add_fanin(Node* node)  {
             for (int i=0; i!=fanin_list.size(); ++i) {
                 if (node->name == fanin_list[i]->name) return;
@@ -31,9 +33,10 @@ class Node
         vector<Node*>& get_fanin_list() { return fanin_list; }
         vector<Node*>& get_fanout_list() { return fanout_list; }
         string name;
-	int id;
+
+	    int id;
         
-    //Detect cycle part
+        //Detect cycle part
         Node* get_fanin(int i) {return fanin_list[i];}
         Node* get_fanout(int i) {return fanout_list[i];}
         int get_fanin_size() {return fanin_list.size();}
@@ -51,17 +54,24 @@ class Node
         //bool get_in_cycle_or_not () {return in_cycle_or_not;}
         void set_traversed_or_not (bool t) {traversed_or_not=t;}
         bool get_traversed_or_not () {return traversed_or_not;}
+        Gate* get_DFF()         { return DFF; }
+        void  set_DFF( Gate* g ){ DFF = g;} 
+        int   get_level() { return level;}
+        void  set_level(int i ) { level = i; }
+
         
     private:
         vector< Node*>  fanout_list;
         vector< Node*>  fanin_list;
     
-    //Detect cycle part
+        //Detect cycle part
         vector <Cycle*> cycle_list;         //cycles that contain the node
         int DFS_id;                             //DFS id in stack
         bool in_stack_or_not;               //flag indicate that the node is currently in stack or not
         //bool in_cycle_or_not;               //flag indicate that the node is currently in cycle or not
         bool traversed_or_not;              //flag indicate that the node is traversed or not
+        Gate* DFF;
+        int level;
         
 };
 
@@ -74,14 +84,17 @@ class DGraph
         DGraph();
         ~DGraph();
     //Graph generation part
-        void add_node(const Node& newNode) { node_list.push_back(newNode); }
+        void add_node( Node* newNode) { node_list.push_back(newNode); }
         const void print_list() {
             for(int i=0; i!=node_list.size(); ++i) {
-                cout << i+1 << ": " << node_list[i].name << endl;
+                cout << i+1 << ": " << node_list[i] -> name << endl;
                 cout << "  fanin:  ";
-                for (int j=0; j!=node_list[i].get_fanin_size(); ++j) {printf("%s ", node_list[i].get_fanin(j)->name.c_str());}
+                for (int j=0; j!=node_list[i] -> get_fanin_size(); ++j) 
+                    printf("%s ", node_list[i] -> get_fanin(j)->name.c_str());
+                
                 cout <<endl<< "  fanout: ";
-                for (int j=0; j!=node_list[i].get_fanout_size(); ++j) {printf("%s ", node_list[i].get_fanout(j)->name.c_str());}
+                for (int j=0; j!=node_list[i] -> get_fanout_size(); ++j) 
+                    printf("%s ", node_list[i] -> get_fanout(j)-> name.c_str());
                 cout << endl<<endl;
             }
         }
@@ -94,10 +107,13 @@ class DGraph
         void add_node_to_fvs(Node* n) {fvs.push_back(n);}
         int get_fvs_size() {return fvs.size();}
         Node* get_fvs_node (int i) {return fvs[i];}
-	    Node& get_node (int i) {return node_list[i];}
+	    Node* get_node (int i) {return node_list[i];}
+
+        // levelization 
+        void levelization();
 
     private:
-        vector< Node > node_list;           
+        vector< Node* > node_list;           
 
 
         //Detect cycle part

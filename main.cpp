@@ -36,6 +36,7 @@ void DFS_DFF_connection( map< string, Gate* >& );
 void DFF_connection( Gate*, vector< Gate* >& );
 void DFF_levelization( map< string, Gate* >& );
 void Deadlock_elimination( map< string, Gate* > &, map< string, Wire* > & );
+void build_node_connection( map< string, Gate* > & );
 
 
 string CLKNAME = "clk";
@@ -44,15 +45,17 @@ int main(int argc, char** argv)
     if( argc == 1 )
     {
         graph_generator();
-	    Global_DG->find_cycle();
-	    Global_DG->find_fvs();
-	    Global_DG->print_status();
     }
     else if( argc == 2 )
     {
         file_parser(argv[1]);
+        
     }
     
+
+	//Global_DG -> levelization();
+	//Global_DG->print_status();
+
     return 0;
 }
 
@@ -148,10 +151,16 @@ void file_parser(const char* gate_file)
     */
     DFS_DFF_connection( gate_list );
 
-    Deadlock_elimination( gate_list, wire_list ); 
     //DFF_levelization  ( gate_list );
 
-    
+    build_node_connection( gate_list );
+
+
+    Global_DG -> find_cycle();
+	Global_DG -> find_fvs();
+    Deadlock_elimination( gate_list, wire_list ); 
+   
+	Global_DG -> print_status();
     print_gate( gate_list );
 
 }
@@ -174,7 +183,7 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 	Global_DG = new DGraph();
 	for (int i=0;i<node_num;i++)
 	{
-		Global_DG->add_node(*(temp_node_list[i]));
+		Global_DG->add_node( temp_node_list[i] );
 	}
 	cout << "add empty node done" << endl;
 
@@ -184,8 +193,8 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 		{
 			if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
 			{
-				Global_DG->get_node(i).add_fanout(&(Global_DG->get_node(j)));
-				Global_DG->get_node(j).add_fanin(&(Global_DG->get_node(i)));
+				Global_DG->get_node(i) -> add_fanout( Global_DG->get_node(j) );
+				Global_DG->get_node(j) -> add_fanin(  Global_DG->get_node(i) );
 				
 			}	
 		}	
@@ -200,8 +209,8 @@ void graph_generator (int node_num, float connection_rate)     //node_num should
 				continue;
 			else if (rand() / (RAND_MAX + 1.0 ) <connection_rate)
 			{
-				Global_DG->get_node(i).add_fanout(&(Global_DG->get_node(j)));
-				Global_DG->get_node(j).add_fanin(&(Global_DG->get_node(i)));
+				Global_DG->get_node(i) -> add_fanout( Global_DG->get_node(j) );
+				Global_DG->get_node(j) -> add_fanin(  Global_DG->get_node(i) );
 				
 			}	
 		}	
@@ -246,7 +255,7 @@ void build_wire( string s, map< string, Wire* >& m, int& wire_type)
                 new_wire( wire_name, m, 0 );
             else
                 new_wire( wire_name, m, wire_type );
-            printf ("%s\n",pch);
+            //printf ("%s\n",pch);
             pch = strtok (NULL, " ,;");
         }
     }
@@ -254,7 +263,7 @@ void build_wire( string s, map< string, Wire* >& m, int& wire_type)
     {
         int a =  atoi( s.substr( find_l + 1, find_m - find_l - 1 ).c_str() );
         int b =  atoi( s.substr( find_m + 1, find_r - find_m - 1 ).c_str() );
-        cout << a << " " << b<< endl;
+        //cout << a << " " << b<< endl;
         int low  = ( a < b )? a : b ;
         int high = ( a > b )? a : b ;
 
@@ -272,7 +281,7 @@ void build_wire( string s, map< string, Wire* >& m, int& wire_type)
                 wire_name.append("]");
                 //Wire* wire = new Wire( wire_name );
                 new_wire( wire_name, m, wire_type );
-                cout << wire_name << endl;
+                //cout << wire_name << endl;
             }
             pch = strtok (NULL, " ,;");
         }
@@ -383,7 +392,7 @@ void input_output_DFF( map< string, Gate* >& map_gate, map< string, Wire*> & map
             Wire* clkwire = map_wire[ CLKNAME ]; // clock name 
 
             string curwire_name = curwire -> set_name();
-            cout << "input eliminate: " << wire_name << endl;
+            //cout << "input eliminate: " << wire_name << endl;
 
             //map_wire[ curwire_name ] = curwire;
             curwire_name_list.push_back( curwire_name );
@@ -409,7 +418,7 @@ void input_output_DFF( map< string, Gate* >& map_gate, map< string, Wire*> & map
             Wire* clkwire = map_wire[ CLKNAME ]; // clock name 
             
             string curwire_name = curwire -> set_name();
-            cout << "output eliminate: " << wire_name << endl;
+            //cout << "output eliminate: " << wire_name << endl;
             //map_wire[ curwire_name ] = curwire;
             curwire_name_list.push_back( curwire_name );
             curwire_list.push_back( curwire );
@@ -980,6 +989,41 @@ void Deadlock_elimination( map< string, Gate* > & map_gate,
 
 
 
+}
+
+
+
+void build_node_connection( map< string, Gate* > & map_gate )
+{
+
+    Gate* curgate;
+    int   id = 0;
+    Node* curnode;
+    Global_DG = new DGraph();
+    for ( map<string ,Gate*>::iterator it= map_gate.begin(); it!= map_gate.end(); ++it)
+    {
+        curgate = it -> second;
+        if( !isDFF( curgate ) )
+            continue;
+        
+		curnode = new Node( curgate -> get_name(),id, curgate );
+		Global_DG -> add_node( curnode );
+        curgate   -> set_node( curnode );
+        ++id;
+    } 
+
+    for ( map<string ,Gate*>::iterator it= map_gate.begin(); it!= map_gate.end(); ++it)
+    {
+        curgate = it -> second;
+        if( !isDFF( curgate ) )
+            continue;
+        curnode = curgate -> get_node();
+        for( size_t i = 0; i < curgate -> fanin_dff_size(); i++ )
+            curnode -> add_fanin( curgate -> get_fanin_dff(i) -> get_node() );   
+
+        for( size_t i = 0; i < curgate -> fanout_dff_size(); i++ )
+            curnode -> add_fanout( curgate -> get_fanout_dff(i) -> get_node() );    
+    }
 }
 
 

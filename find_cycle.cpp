@@ -24,11 +24,11 @@ void DGraph::find_cycle()
     //find those node whose indegree==0
     for (int i=0; i<node_list.size();i++)				//initialize DFS information
     {
-       node_list[i].set_node_DFS_id(-1);
-       node_list[i].set_traversed_or_not(false);
+       node_list[i] -> set_node_DFS_id(-1);
+       node_list[i] -> set_traversed_or_not(false);
 
-       if (node_list[i].get_fanin_size()==0)
-            DFS_start_nodes.push_back(&node_list[i]); 
+       if (node_list[i] -> get_fanin_size()==0)
+            DFS_start_nodes.push_back( node_list[i] ); 
     }
     for (int i=0; i<DFS_start_nodes.size();i++)				//for each PI, DFS traverse to find cycle
     {
@@ -98,7 +98,7 @@ void DGraph::find_fvs()
     for (int i=0;i<node_list.size();i++)
     {
     	//cout << node_list[i].get_cycle_size() << endl;
-        sorted_node.push_back(&node_list[i]);
+        sorted_node.push_back( node_list[i] );
     	//cout << &node_list[i] << endl;
     	//cout << (&node_list[i])->get_cycle_size() << endl;
     }
@@ -138,20 +138,20 @@ void DGraph::print_status()
 {
 	for (int i=0;i<node_list.size();i++)
 	{
-		cout << "Node_id:" << node_list[i].get_node_id()<< endl;	
-		cout << "Node_id:" << &node_list[i]<< endl;	
+		cout << "Node_id:" << node_list[i] -> get_node_id()<< endl;	
+		cout << "Node_id:" << node_list[i]<< endl;	
 		cout << "fanin:" << endl;	
-		for (int j=0;j<node_list[i].get_fanin_size();j++)
+		for (int j=0;j<node_list[i] -> get_fanin_size();j++)
 		{
-			cout << node_list[i].get_fanin(j) << " ";
-			cout << node_list[i].get_fanin(j)->get_node_id() << " ";
+			cout << node_list[i] -> get_fanin(j) << " ";
+			cout << node_list[i] -> get_fanin(j)->get_node_id() << " ";
 		}
 		cout << endl;
 		cout << "fanout:" << endl;	
-		for (int j=0;j<node_list[i].get_fanout_size();j++)
+		for (int j=0;j<node_list[i] -> get_fanout_size();j++)
 		{
-			cout << node_list[i].get_fanout(j) << " ";
-			cout << node_list[i].get_fanout(j)->get_node_id() << " ";
+			cout << node_list[i] -> get_fanout(j) << " ";
+			cout << node_list[i] -> get_fanout(j)->get_node_id() << " ";
 		}
 		cout << endl;
 	}
