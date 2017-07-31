@@ -17,7 +17,7 @@ bool nodep_compare (Node* node1, Node* node2)
 void DGraph::find_cycle()
 {    
 
-    cout << "Start to find cycle and fvs" << endl;
+    //cout << "Start to find cycle and fvs" << endl;
     //cout << node_list.size() << endl;
 
     vector <Node*> DFS_start_nodes; 
@@ -130,7 +130,8 @@ void DGraph::find_fvs()
         i+=1;
     }
 
-
+    for( size_t i = 0; i < fvs.size(); i++ )
+        fvs[i] -> get_DFF() -> set_fvs(); 
 }
 
 
@@ -173,7 +174,4 @@ void DGraph::print_status()
 		cout << fvs[i]->get_node_id() << " "  << endl;
 		
 	}
-
-
-
 }
